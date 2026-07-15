@@ -77,7 +77,7 @@ function renderHistory() {
         <li class="session ${session.mode === 'pomodoro' ? '' : 'break'}">
           <span class="session-icon">${session.mode === 'pomodoro' ? '●' : '☕'}</span>
           <span class="session-detail">
-            <span class="session-name">${escapeHtml(session.name)}</span>
+            <span class="session-name">${escapeHtml(MODES[session.mode].name)}</span>
             ${session.task ? `<span class="session-task">${escapeHtml(session.task)}</span>` : ''}
           </span>
           <span class="session-time">${formatDuration(session.seconds)} · ${session.time}</span>
@@ -100,7 +100,6 @@ function saveSession() {
   sessions.push({
     date: todayKey(),
     mode,
-    name: MODES[mode].name,
     task: sessionTask,
     seconds: elapsedSeconds,
     time: now.toLocaleTimeString('ko-KR', {
@@ -199,7 +198,8 @@ function copyHistory() {
     `총 집중 시간: ${formatDurationFriendly(focusSeconds)}`,
     '',
     ...sessions.map((session) => {
-      const name = session.mode === 'pomodoro' ? (session.task || session.name) : session.name;
+      const defaultName = MODES[session.mode].name;
+      const name = session.mode === 'pomodoro' ? (session.task || defaultName) : defaultName;
       return `${session.time} - ${name} ${formatDurationFriendly(session.seconds)}`;
     }),
   ].join('\n');
