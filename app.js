@@ -33,6 +33,7 @@ if (localStorage.getItem(oldStorageKey)) {
   localStorage.removeItem(oldStorageKey);
 }
 
+const DIAL_CIRCUMFERENCE = 829.38; // 2 * PI * r (r = 132)
 const maxDurationSeconds = 99 * 60 + 59;
 
 let mode = 'pomodoro';
@@ -43,14 +44,6 @@ let interval;
 let sessionTask = '';
 
 const todayKey = new Date().toISOString().slice(0, 10);
-
-function displayDate() {
-  return new Intl.DateTimeFormat('ko-KR', {
-    month: 'long',
-    day: 'numeric',
-    weekday: 'short',
-  }).format(new Date());
-}
 
 function formatDuration(seconds) {
   const minutes = Math.floor(seconds / 60);
@@ -78,7 +71,7 @@ const sessions = JSON.parse(localStorage.getItem(storageKey) || '[]')
 
 function renderTimer() {
   elTime.value = formatDuration(remaining);
-  elDialProgress.style.strokeDashoffset = 829.38 * (1 - remaining / total);
+  elDialProgress.style.strokeDashoffset = DIAL_CIRCUMFERENCE * (1 - remaining / total);
   elStartLabel.textContent = running ? '완료하기' : '시작하기';
   elPlay.textContent = running ? '✓' : '▶';
   elTime.readOnly = running;
@@ -217,7 +210,7 @@ function copyHistory() {
     .reduce((sum, session) => sum + session.seconds, 0);
 
   const text = [
-    `오늘의 집중 기록 (${displayDate()})`,
+    `${todayKey} 집중 기록`,
     `총 집중 시간: ${formatDurationFriendly(focusSeconds)}`,
     '',
     ...sessions.map((session) => {
@@ -276,37 +269,41 @@ function applyTimeInput() {
   renderTimer();
 }
 
-elStart.onclick = startOrFinish;
+function init() {
+  elStart.onclick = startOrFinish;
 
-elModeButtons.forEach((button) => {
-  button.onclick = () => setMode(button.dataset.mode);
-});
+  elModeButtons.forEach((button) => {
+    button.onclick = () => setMode(button.dataset.mode);
+  });
 
-elTime.addEventListener('change', applyTimeInput);
-elTime.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') {
+  elTime.addEventListener('change', applyTimeInput);
+  elTime.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      applyTimeInput();
+      elTime.blur();
+    }
+  });
+
+  elTaskForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    applyTimeInput();
-    elTime.blur();
-  }
-});
+    sessionTask = elTaskInput.value.trim() || '집중 시간';
+    elTaskDialog.close();
+    beginTimer();
+  });
 
-elTaskForm.addEventListener('submit', (event) => {
-  event.preventDefault();
-  sessionTask = elTaskInput.value.trim() || '이름 없는 집중';
-  elTaskDialog.close();
-  beginTimer();
-});
+  elTaskCancel.onclick = () => elTaskDialog.close();
+  elClearHistory.onclick = () => {
+    sessions.length = 0;
+    localStorage.removeItem(storageKey);
+    renderHistory();
+  };
+  elCopyHistory.onclick = copyHistory;
 
-elTaskCancel.onclick = () => elTaskDialog.close();
-elClearHistory.onclick = () => {
-  sessions.length = 0;
-  localStorage.removeItem(storageKey);
+  elToday.textContent = todayKey;
+  document.body.className = 'theme-' + mode;
+  renderTimer();
   renderHistory();
-};
-elCopyHistory.onclick = copyHistory;
+}
 
-elToday.textContent = displayDate();
-document.body.className = 'theme-' + mode;
-renderTimer();
-renderHistory();
+init();
