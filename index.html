@@ -46,6 +46,23 @@
         <p id="empty-history" class="empty">첫 번째 집중 세션을 시작해 보세요.</p>
       </section>
     </main>
+    <dialog class="task-dialog" id="task-dialog" aria-labelledby="task-dialog-title">
+      <form method="dialog" id="task-form">
+        <p class="dialog-kicker">집중 세션</p>
+        <h2 id="task-dialog-title">무엇에 집중할까요?</h2>
+        <label class="sr-only" for="task-input">집중할 일</label>
+        <input id="task-input" type="text" maxlength="80" placeholder="예: 프로젝트 제안서 작성" autocomplete="off" />
+        <div class="dialog-actions"><button class="dialog-cancel" value="cancel">취소</button><button class="dialog-submit" value="start">집중 시작</button></div>
+      </form>
+    </dialog>
+    <dialog class="task-dialog" id="copy-dialog" aria-labelledby="copy-dialog-title">
+      <form method="dialog">
+        <p class="dialog-kicker">오늘의 기록</p>
+        <h2 id="copy-dialog-title">아래 내용을 복사하세요</h2>
+        <textarea id="copy-text" readonly></textarea>
+        <div class="dialog-actions"><button class="dialog-submit">닫기</button></div>
+      </form>
+    </dialog>
     <script src="./app.js"></script>
   </body>
 </html>
