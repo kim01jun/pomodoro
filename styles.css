@@ -212,4 +212,5 @@ header p { color: var(--muted); font-size: 12px; }
   .dial { width: 250px; height: 250px; }
   .timer-input { font-size: 57px; }
   .history { padding-inline: 21px; }
+  .task-dialog input, .task-dialog textarea { font-size: 16px; }
 }
