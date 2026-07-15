@@ -22,6 +22,7 @@ const elClearHistory = $('#clear-history');
 const elEmptyHistory = $('#empty-history');
 const elCopyText = $('#copy-text');
 const elCopyDialog = $('#copy-dialog');
+const elCopyToast = $('#copy-toast');
 const elGoalForm = $('#goal-form');
 const elGoalInput = $('#goal-input');
 const elGoalDialog = $('#goal-dialog');
@@ -47,6 +48,7 @@ let total = 25 * 60;
 let remaining = total;
 let running = false;
 let interval;
+let copyToastTimeout;
 let sessionGoal = '';
 
 const todayKey = new Date().toISOString().slice(0, 10);
@@ -241,26 +243,31 @@ function copyHistory() {
     .filter((session) => session.mode === 'pomodoro')
     .reduce((sum, session) => sum + session.seconds, 0);
 
+  const sessionBlocks = sessions.map((session) => {
+    const endTime = new Date(session.timestamp);
+    const startTime = new Date(endTime.getTime() - session.seconds * 1000);
+    const timeRange = `${formatSessionTime(startTime)} ~ ${formatSessionTime(endTime)}`;
+
+    if (session.mode === 'break') return `${timeRange}\n휴식`;
+
+    return [
+      timeRange,
+      `목표: ${session.goal || MODES.pomodoro.name}`,
+      `결과: ${session.result || ''}`,
+    ].join('\n');
+  });
+
   const text = [
     `${todayKey} 집중 기록`,
     `총 집중 시간: ${formatDurationFriendly(focusSeconds)}`,
     '',
-    ...sessions.map((session) => {
-      const defaultName = MODES[session.mode].name;
-      const name = session.mode === 'pomodoro' ? (session.goal || defaultName) : defaultName;
-      const result = session.mode === 'pomodoro' && session.result ? ` / 결과: ${session.result}` : '';
-      const goal = session.mode === 'pomodoro' ? `목표: ${name}` : name;
-      return `${formatSessionTime(session.timestamp)} - ${goal}${result} ${formatDurationFriendly(session.seconds)}`;
-    }),
+    sessionBlocks.join('\n\n'),
   ].join('\n');
 
-  const copyButton = elCopyHistory;
   const showCopied = () => {
-    const originalLabel = copyButton.textContent;
-    copyButton.textContent = '복사됨';
-    setTimeout(() => {
-      copyButton.textContent = originalLabel;
-    }, 1500);
+    clearTimeout(copyToastTimeout);
+    elCopyToast.classList.add('visible');
+    copyToastTimeout = setTimeout(() => elCopyToast.classList.remove('visible'), 2200);
   };
 
   const showCopyDialog = () => {

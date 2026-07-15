@@ -225,6 +225,26 @@ header p { color: var(--muted); font-size: 12px; }
 .dialog-cancel { color: var(--muted); background: transparent; }
 .dialog-submit { color: #fff; background: var(--red); }
 
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  z-index: 10;
+  padding: 10px 14px;
+  color: #fff;
+  background: var(--ink);
+  border-radius: 9px;
+  box-shadow: 0 8px 24px rgba(41, 40, 32, .2);
+  font-size: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 8px);
+  transition: opacity .2s ease, transform .2s ease;
+  white-space: nowrap;
+}
+
+.toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
 /* 몰입 모드 (딤 처리) 스타일 */
 header, .mode-tabs, .mode-label, .history {
   transition: opacity 0.5s ease, filter 0.5s ease;
