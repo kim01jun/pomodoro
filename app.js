@@ -12,6 +12,8 @@ const elStart = $('#start');
 const elStartLabel = $('#start-label');
 const elPlay = $('.play');
 const elModeLabel = $('#mode-label');
+const elCurrentTask = $('#current-task');
+const elCurrentTaskName = $('#current-task-name');
 const elSessionList = $('#session-list');
 const elToday = $('#today');
 const elModeButtons = document.querySelectorAll('.mode');
@@ -79,6 +81,10 @@ function renderTimer() {
   elModeButtons.forEach((button) => {
     button.disabled = running;
   });
+
+  const showCurrentTask = mode === 'pomodoro' && running && Boolean(sessionTask);
+  elCurrentTask.hidden = !showCurrentTask;
+  elCurrentTaskName.textContent = showCurrentTask ? sessionTask : '';
 }
 
 function renderHistory() {
