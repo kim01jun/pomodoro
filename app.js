@@ -53,6 +53,7 @@ function renderTimer() {
   $('#start-label').textContent = running ? '완료하기' : '시작하기';
   $('.play').textContent = running ? '✓' : '▶';
   $('#time').readOnly = running;
+  $('#start').classList.toggle('running', running);
   document.querySelectorAll('.mode').forEach((button) => {
     button.disabled = running;
   });
@@ -121,7 +122,7 @@ function setMode(nextMode) {
   clearInterval(interval);
 
   $('#mode-label').textContent = MODES[mode].label;
-  $('#dial-progress').style.stroke = MODES[mode].color;
+  document.body.className = 'theme-' + mode;
   document.querySelectorAll('.mode').forEach((button) => {
     button.classList.toggle('active', button.dataset.mode === mode);
   });
@@ -267,5 +268,6 @@ $('#clear-history').onclick = () => {
 $('#copy-history').onclick = copyHistory;
 
 $('#today').textContent = displayDate();
+document.body.className = 'theme-' + mode;
 renderTimer();
 renderHistory();

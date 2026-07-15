@@ -15,6 +15,15 @@ body {
   background: #f2f0e9;
   color: var(--ink);
   font-family: 'Noto Sans KR', 'DM Sans', sans-serif;
+  transition: background 0.3s ease;
+}
+
+body.theme-pomodoro {
+  background: #f2f0e9;
+}
+
+body.theme-break {
+  background: #edf2ee;
 }
 
 .app {
@@ -79,7 +88,9 @@ header p { color: var(--muted); font-size: 12px; }
   font: 500 12px 'Noto Sans KR';
 }
 
-.mode.active { color: #34322c; background: white; box-shadow: 0 1px 4px #918c8240; }
+.mode.active { background: white; box-shadow: 0 1px 4px #918c8240; }
+.theme-pomodoro .mode.active { color: var(--red); }
+.theme-break .mode.active { color: var(--green); }
 .mode:disabled { cursor: not-allowed; opacity: .55; }
 .mode-label { margin: 31px 0 2px; color: var(--muted); font-size: 12px; }
 
@@ -88,6 +99,8 @@ header p { color: var(--muted); font-size: 12px; }
 .dial-base, .dial-progress { fill: none; stroke-width: 5; }
 .dial-base { stroke: #ebe8e0; }
 .dial-progress { stroke: var(--red); stroke-linecap: round; stroke-dasharray: 829.38; transition: stroke-dashoffset .5s linear, stroke .2s; }
+.theme-pomodoro .dial-progress { stroke: var(--red); }
+.theme-break .dial-progress { stroke: var(--green); }
 
 .timer-input {
   position: absolute;
@@ -108,14 +121,53 @@ header p { color: var(--muted); font-size: 12px; }
 
 .start {
   min-width: 139px;
-  padding: 14px 18px;
+  padding: 13px 17px;
   color: white;
-  background: var(--red);
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 9px;
-  box-shadow: 0 5px 12px #d9604f35;
   cursor: pointer;
   font: 700 12px 'Noto Sans KR';
+  transition: background 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.theme-pomodoro .start {
+  background: var(--red);
+  box-shadow: 0 5px 12px rgba(217, 96, 79, 0.25);
+}
+
+.theme-pomodoro .start:hover {
+  background: #c25040;
+}
+
+.theme-break .start {
+  background: var(--green);
+  box-shadow: 0 5px 12px rgba(100, 134, 115, 0.25);
+}
+
+.theme-break .start:hover {
+  background: #537060;
+}
+
+.theme-pomodoro .start.running {
+  background: #f9e1dc !important;
+  color: var(--red) !important;
+  border-color: #f2c7c0 !important;
+  box-shadow: 0 3px 8px rgba(217, 96, 79, 0.06) !important;
+}
+
+.theme-pomodoro .start.running:hover {
+  background: #f5cfc7 !important;
+}
+
+.theme-break .start.running {
+  background: #e1ebe1 !important;
+  color: var(--green) !important;
+  border-color: #cadbc9 !important;
+  box-shadow: 0 3px 8px rgba(100, 134, 115, 0.06) !important;
+}
+
+.theme-break .start.running:hover {
+  background: #d1e0d0 !important;
 }
 
 .play { padding-right: 7px; font: 9px 'DM Sans'; }
