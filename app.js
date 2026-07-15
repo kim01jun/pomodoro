@@ -4,6 +4,29 @@ const MODES = {
 };
 
 const $ = (selector) => document.querySelector(selector);
+
+// DOM Elements Cache
+const elTime = $('#time');
+const elDialProgress = $('#dial-progress');
+const elStart = $('#start');
+const elStartLabel = $('#start-label');
+const elPlay = $('.play');
+const elModeLabel = $('#mode-label');
+const elSessionList = $('#session-list');
+const elToday = $('#today');
+const elModeButtons = document.querySelectorAll('.mode');
+const elCopyHistory = $('#copy-history');
+const elClearHistory = $('#clear-history');
+const elEmptyHistory = $('#empty-history');
+const elCopyText = $('#copy-text');
+const elCopyDialog = $('#copy-dialog');
+const elTaskForm = $('#task-form');
+const elTaskInput = $('#task-input');
+const elTaskDialog = $('#task-dialog');
+const elTaskCancel = $('#task-cancel');
+const elFocusTotalMin = $('#focus-total-min');
+const elFocusTotalSec = $('#focus-total-sec');
+
 const storageKey = 'focusflow-sessions-v2';
 const oldStorageKey = 'focusflow-sessions';
 if (localStorage.getItem(oldStorageKey)) {
@@ -51,16 +74,16 @@ function escapeHtml(value) {
 
 // Today's session history is kept only in this browser.
 const sessions = JSON.parse(localStorage.getItem(storageKey) || '[]')
-  .filter((session) => session.timestamp.slice(0, 10) === todayKey);
+  .filter((session) => session.timestamp && session.timestamp.slice(0, 10) === todayKey);
 
 function renderTimer() {
-  $('#time').value = formatDuration(remaining);
-  $('#dial-progress').style.strokeDashoffset = 829.38 * (1 - remaining / total);
-  $('#start-label').textContent = running ? '완료하기' : '시작하기';
-  $('.play').textContent = running ? '✓' : '▶';
-  $('#time').readOnly = running;
-  $('#start').classList.toggle('running', running);
-  document.querySelectorAll('.mode').forEach((button) => {
+  elTime.value = formatDuration(remaining);
+  elDialProgress.style.strokeDashoffset = 829.38 * (1 - remaining / total);
+  elStartLabel.textContent = running ? '완료하기' : '시작하기';
+  elPlay.textContent = running ? '✓' : '▶';
+  elTime.readOnly = running;
+  elStart.classList.toggle('running', running);
+  elModeButtons.forEach((button) => {
     button.disabled = running;
   });
 }
@@ -72,10 +95,10 @@ function renderHistory() {
 
   const minutes = Math.floor(focusSeconds / 60);
   const seconds = focusSeconds % 60;
-  $('#focus-total-min').textContent = minutes;
-  $('#focus-total-sec').textContent = seconds;
+  elFocusTotalMin.textContent = minutes;
+  elFocusTotalSec.textContent = seconds;
 
-  $('#session-list').innerHTML = sessions
+  elSessionList.innerHTML = sessions
     .slice()
     .reverse()
     .map(
@@ -93,9 +116,9 @@ function renderHistory() {
     .join('');
 
   const hasSessions = sessions.length > 0;
-  $('#empty-history').hidden = hasSessions;
-  $('#clear-history').hidden = !hasSessions;
-  $('#copy-history').hidden = !hasSessions;
+  elEmptyHistory.hidden = hasSessions;
+  elClearHistory.hidden = !hasSessions;
+  elCopyHistory.hidden = !hasSessions;
 }
 
 function saveSession() {
@@ -123,9 +146,9 @@ function setMode(nextMode) {
   running = false;
   clearInterval(interval);
 
-  $('#mode-label').textContent = MODES[mode].label;
+  elModeLabel.textContent = MODES[mode].label;
   document.body.className = 'theme-' + mode;
-  document.querySelectorAll('.mode').forEach((button) => {
+  elModeButtons.forEach((button) => {
     button.classList.toggle('active', button.dataset.mode === mode);
   });
 
@@ -166,9 +189,9 @@ function startOrFinish() {
   }
 
   if (mode === 'pomodoro' && !sessionTask) {
-    $('#task-input').value = '';
-    $('#task-dialog').showModal();
-    setTimeout(() => $('#task-input').focus(), 0);
+    elTaskInput.value = '';
+    elTaskDialog.showModal();
+    setTimeout(() => elTaskInput.focus(), 0);
     return;
   }
 
@@ -204,7 +227,7 @@ function copyHistory() {
     }),
   ].join('\n');
 
-  const copyButton = $('#copy-history');
+  const copyButton = elCopyHistory;
   const showCopied = () => {
     const originalLabel = copyButton.textContent;
     copyButton.textContent = '복사됨';
@@ -214,9 +237,9 @@ function copyHistory() {
   };
 
   const showCopyDialog = () => {
-    $('#copy-text').value = text;
-    $('#copy-dialog').showModal();
-    setTimeout(() => $('#copy-text').select(), 0);
+    elCopyText.value = text;
+    elCopyDialog.showModal();
+    setTimeout(() => elCopyText.select(), 0);
   };
 
   if (navigator.clipboard?.writeText) {
@@ -229,7 +252,7 @@ function copyHistory() {
 function applyTimeInput() {
   if (running) return;
 
-  const input = $('#time');
+  const input = elTime;
   const match = input.value.trim().match(/^(\d+)(?::(\d+))?$/);
 
   if (!match) {
@@ -253,37 +276,37 @@ function applyTimeInput() {
   renderTimer();
 }
 
-$('#start').onclick = startOrFinish;
+elStart.onclick = startOrFinish;
 
-document.querySelectorAll('.mode').forEach((button) => {
+elModeButtons.forEach((button) => {
   button.onclick = () => setMode(button.dataset.mode);
 });
 
-$('#time').addEventListener('change', applyTimeInput);
-$('#time').addEventListener('keydown', (event) => {
+elTime.addEventListener('change', applyTimeInput);
+elTime.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') {
     event.preventDefault();
     applyTimeInput();
-    $('#time').blur();
+    elTime.blur();
   }
 });
 
-$('#task-form').addEventListener('submit', (event) => {
+elTaskForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  sessionTask = $('#task-input').value.trim() || '이름 없는 집중';
-  $('#task-dialog').close();
+  sessionTask = elTaskInput.value.trim() || '이름 없는 집중';
+  elTaskDialog.close();
   beginTimer();
 });
 
-$('#task-cancel').onclick = () => $('#task-dialog').close();
-$('#clear-history').onclick = () => {
+elTaskCancel.onclick = () => elTaskDialog.close();
+elClearHistory.onclick = () => {
   sessions.length = 0;
   localStorage.removeItem(storageKey);
   renderHistory();
 };
-$('#copy-history').onclick = copyHistory;
+elCopyHistory.onclick = copyHistory;
 
-$('#today').textContent = displayDate();
+elToday.textContent = displayDate();
 document.body.className = 'theme-' + mode;
 renderTimer();
 renderHistory();
