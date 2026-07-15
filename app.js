@@ -173,6 +173,19 @@ function startOrFinish() {
   beginTimer();
 }
 
+function formatDurationFriendly(seconds) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainder = seconds % 60;
+
+  let result = [];
+  if (hours > 0) result.push(`${hours}시간`);
+  if (minutes > 0 || (hours === 0 && remainder === 0)) result.push(`${minutes}분`);
+  if (remainder > 0) result.push(`${remainder}초`);
+
+  return result.join(' ');
+}
+
 function copyHistory() {
   const focusSeconds = sessions
     .filter((session) => session.mode === 'pomodoro')
@@ -180,12 +193,12 @@ function copyHistory() {
 
   const text = [
     `오늘의 집중 기록 (${displayDate()})`,
-    `총 집중 시간: ${formatDuration(focusSeconds)}`,
+    `총 집중 시간: ${formatDurationFriendly(focusSeconds)}`,
     '',
-    ...sessions.map(
-      (session) =>
-        `- ${session.time} · ${session.name} ${formatDuration(session.seconds)}${session.task ? ` · ${session.task}` : ''}`,
-    ),
+    ...sessions.map((session) => {
+      const name = session.mode === 'pomodoro' ? (session.task || session.name) : session.name;
+      return `${session.time} - ${name} ${formatDurationFriendly(session.seconds)}`;
+    }),
   ].join('\n');
 
   const copyButton = $('#copy-history');
