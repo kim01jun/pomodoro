@@ -22,9 +22,9 @@
           <button class="mode" data-mode="break">휴식</button>
         </div>
         <p class="mode-label" id="mode-label">집중 시간</p>
-        <div class="current-task" id="current-task" aria-live="polite" hidden>
-          <span class="current-task-label">지금 집중하는 일</span>
-          <strong id="current-task-name"></strong>
+        <div class="current-goal" id="current-goal" aria-live="polite" hidden>
+          <span class="current-goal-label">현재 목표</span>
+          <strong id="current-goal-name"></strong>
         </div>
         <div class="dial">
           <svg viewBox="0 0 300 300" aria-hidden="true">
@@ -47,16 +47,26 @@
         <p id="empty-history" class="empty">첫 번째 집중 세션을 시작해 보세요.</p>
       </section>
     </main>
-    <dialog class="task-dialog" id="task-dialog" aria-labelledby="task-dialog-title">
-      <form id="task-form">
+    <dialog class="entry-dialog" id="goal-dialog" aria-labelledby="goal-dialog-title">
+      <form id="goal-form">
         <p class="dialog-kicker">집중 세션</p>
-        <h2 id="task-dialog-title">무엇에 집중할까요?</h2>
-        <label class="sr-only" for="task-input">집중할 일</label>
-        <input id="task-input" type="text" maxlength="80" placeholder="예: 프로젝트 제안서 작성" autocomplete="off" />
-        <div class="dialog-actions"><button class="dialog-cancel" id="task-cancel" type="button">취소</button><button class="dialog-submit" type="submit">집중 시작</button></div>
+        <h2 id="goal-dialog-title">이번 집중의 목표는 무엇인가요?</h2>
+        <label class="sr-only" for="goal-input">집중 목표</label>
+        <input id="goal-input" type="text" maxlength="80" placeholder="예: 프로젝트 제안서 초안 작성" autocomplete="off" />
+        <div class="dialog-actions"><button class="dialog-cancel" id="goal-cancel" type="button">취소</button><button class="dialog-submit" type="submit">집중 시작</button></div>
       </form>
     </dialog>
-    <dialog class="task-dialog" id="copy-dialog" aria-labelledby="copy-dialog-title">
+    <dialog class="entry-dialog" id="completion-dialog" aria-labelledby="completion-dialog-title">
+      <form id="completion-form">
+        <p class="dialog-kicker">집중 완료</p>
+        <h2 id="completion-dialog-title">집중 결과를 기록해 주세요</h2>
+        <p class="completion-goal"><span>목표</span><strong id="completion-goal-name"></strong></p>
+        <label class="completion-result-label" for="completion-input">결과</label>
+        <textarea id="completion-input" maxlength="200" placeholder="예: 제안서 초안 3페이지 작성 및 자료 조사 완료" required></textarea>
+        <div class="dialog-actions"><button class="dialog-submit" type="submit">기록 완료</button></div>
+      </form>
+    </dialog>
+    <dialog class="entry-dialog" id="copy-dialog" aria-labelledby="copy-dialog-title">
       <form method="dialog">
         <p class="dialog-kicker">오늘의 기록</p>
         <h2 id="copy-dialog-title">아래 내용을 복사하세요</h2>

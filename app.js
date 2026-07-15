@@ -12,8 +12,8 @@ const elStart = $('#start');
 const elStartLabel = $('#start-label');
 const elPlay = $('.play');
 const elModeLabel = $('#mode-label');
-const elCurrentTask = $('#current-task');
-const elCurrentTaskName = $('#current-task-name');
+const elCurrentGoal = $('#current-goal');
+const elCurrentGoalName = $('#current-goal-name');
 const elSessionList = $('#session-list');
 const elToday = $('#today');
 const elModeButtons = document.querySelectorAll('.mode');
@@ -22,10 +22,14 @@ const elClearHistory = $('#clear-history');
 const elEmptyHistory = $('#empty-history');
 const elCopyText = $('#copy-text');
 const elCopyDialog = $('#copy-dialog');
-const elTaskForm = $('#task-form');
-const elTaskInput = $('#task-input');
-const elTaskDialog = $('#task-dialog');
-const elTaskCancel = $('#task-cancel');
+const elGoalForm = $('#goal-form');
+const elGoalInput = $('#goal-input');
+const elGoalDialog = $('#goal-dialog');
+const elGoalCancel = $('#goal-cancel');
+const elCompletionDialog = $('#completion-dialog');
+const elCompletionForm = $('#completion-form');
+const elCompletionInput = $('#completion-input');
+const elCompletionGoalName = $('#completion-goal-name');
 const elFocusTotalMin = $('#focus-total-min');
 const elFocusTotalSec = $('#focus-total-sec');
 
@@ -43,7 +47,7 @@ let total = 25 * 60;
 let remaining = total;
 let running = false;
 let interval;
-let sessionTask = '';
+let sessionGoal = '';
 
 const todayKey = new Date().toISOString().slice(0, 10);
 
@@ -82,9 +86,9 @@ function renderTimer() {
     button.disabled = running;
   });
 
-  const showCurrentTask = mode === 'pomodoro' && running && Boolean(sessionTask);
-  elCurrentTask.hidden = !showCurrentTask;
-  elCurrentTaskName.textContent = showCurrentTask ? sessionTask : '';
+  const showCurrentGoal = mode === 'pomodoro' && running && Boolean(sessionGoal);
+  elCurrentGoal.hidden = !showCurrentGoal;
+  elCurrentGoalName.textContent = showCurrentGoal ? sessionGoal : '';
 
   // 집중 모드가 동작(running) 중일 때만 주변 요소 딤 처리 클래스 토글
   document.body.classList.toggle('focus-active', mode === 'pomodoro' && running);
@@ -108,7 +112,10 @@ function renderHistory() {
         <li class="session ${session.mode === 'pomodoro' ? '' : 'break'}">
           <span class="session-icon">${session.mode === 'pomodoro' ? '⏰' : '☕️'}</span>
           <span class="session-detail">
-            <span class="session-name">${session.task ? escapeHtml(session.task) : escapeHtml(MODES[session.mode].name)}</span>
+            ${session.mode === 'pomodoro'
+              ? `<span class="session-entry"><span class="session-entry-label">목표</span><span class="session-entry-text">${escapeHtml(session.goal || MODES[session.mode].name)}</span></span>
+                 ${session.result ? `<span class="session-entry"><span class="session-entry-label result">결과</span><span class="session-entry-text">${escapeHtml(session.result)}</span></span>` : ''}`
+              : `<span class="session-name">${escapeHtml(MODES[session.mode].name)}</span>`}
           </span>
           <span class="session-time">${formatDuration(session.seconds)} · ${formatSessionTime(session.timestamp)}</span>
         </li>
@@ -122,13 +129,14 @@ function renderHistory() {
   elCopyHistory.hidden = !hasSessions;
 }
 
-function saveSession() {
+function saveSession(result = '') {
   const elapsedSeconds = total - remaining;
   if (elapsedSeconds < 1) return;
 
   sessions.push({
     mode,
-    task: sessionTask,
+    goal: sessionGoal,
+    result,
     seconds: elapsedSeconds,
     timestamp: new Date().toISOString(),
   });
@@ -143,7 +151,7 @@ function setMode(nextMode) {
   mode = nextMode;
   total = MODES[mode].minutes * 60;
   remaining = total;
-  sessionTask = '';
+  sessionGoal = '';
   running = false;
   clearInterval(interval);
 
@@ -156,15 +164,31 @@ function setMode(nextMode) {
   renderTimer();
 }
 
-function finish() {
+function finish(result = '') {
   running = false;
   clearInterval(interval);
-  saveSession();
+  saveSession(result);
 
   remaining = total;
-  sessionTask = '';
+  sessionGoal = '';
   document.title = 'focusflow — 세션 완료';
   renderTimer();
+}
+
+function requestFinish() {
+  if (mode !== 'pomodoro') {
+    finish();
+    return;
+  }
+
+  running = false;
+  clearInterval(interval);
+  renderTimer();
+  elCompletionGoalName.textContent = sessionGoal;
+  elCompletionInput.value = '';
+  elCompletionInput.setCustomValidity('');
+  elCompletionDialog.showModal();
+  setTimeout(() => elCompletionInput.focus(), 0);
 }
 
 function beginTimer() {
@@ -172,7 +196,7 @@ function beginTimer() {
   interval = setInterval(() => {
     if (remaining <= 1) {
       remaining = 0;
-      finish();
+      requestFinish();
       return;
     }
 
@@ -185,14 +209,14 @@ function beginTimer() {
 
 function startOrFinish() {
   if (running) {
-    finish();
+    requestFinish();
     return;
   }
 
-  if (mode === 'pomodoro' && !sessionTask) {
-    elTaskInput.value = '';
-    elTaskDialog.showModal();
-    setTimeout(() => elTaskInput.focus(), 0);
+  if (mode === 'pomodoro' && !sessionGoal) {
+    elGoalInput.value = '';
+    elGoalDialog.showModal();
+    setTimeout(() => elGoalInput.focus(), 0);
     return;
   }
 
@@ -223,8 +247,10 @@ function copyHistory() {
     '',
     ...sessions.map((session) => {
       const defaultName = MODES[session.mode].name;
-      const name = session.mode === 'pomodoro' ? (session.task || defaultName) : defaultName;
-      return `${formatSessionTime(session.timestamp)} - ${name} ${formatDurationFriendly(session.seconds)}`;
+      const name = session.mode === 'pomodoro' ? (session.goal || defaultName) : defaultName;
+      const result = session.mode === 'pomodoro' && session.result ? ` / 결과: ${session.result}` : '';
+      const goal = session.mode === 'pomodoro' ? `목표: ${name}` : name;
+      return `${formatSessionTime(session.timestamp)} - ${goal}${result} ${formatDurationFriendly(session.seconds)}`;
     }),
   ].join('\n');
 
@@ -273,7 +299,7 @@ function applyTimeInput() {
   clearInterval(interval);
   total = duration;
   remaining = duration;
-  sessionTask = '';
+  sessionGoal = '';
   renderTimer();
 }
 
@@ -293,14 +319,29 @@ function init() {
     }
   });
 
-  elTaskForm.addEventListener('submit', (event) => {
+  elGoalForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    sessionTask = elTaskInput.value.trim() || MODES['pomodoro'].name;
-    elTaskDialog.close();
+    sessionGoal = elGoalInput.value.trim() || MODES['pomodoro'].name;
+    elGoalDialog.close();
     beginTimer();
   });
 
-  elTaskCancel.onclick = () => elTaskDialog.close();
+  elGoalCancel.onclick = () => elGoalDialog.close();
+  elCompletionDialog.addEventListener('cancel', (event) => event.preventDefault());
+  elCompletionForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const result = elCompletionInput.value.trim();
+    if (!result) {
+      elCompletionInput.setCustomValidity('실제로 완료한 일을 입력해 주세요.');
+      elCompletionInput.reportValidity();
+      return;
+    }
+
+    elCompletionInput.setCustomValidity('');
+    elCompletionDialog.close();
+    finish(result);
+  });
+  elCompletionInput.addEventListener('input', () => elCompletionInput.setCustomValidity(''));
   elClearHistory.onclick = () => {
     sessions.length = 0;
     localStorage.removeItem(storageKey);
