@@ -50,8 +50,12 @@ const sessions = JSON.parse(localStorage.getItem(storageKey) || '[]')
 function renderTimer() {
   $('#time').value = formatDuration(remaining);
   $('#dial-progress').style.strokeDashoffset = 829.38 * (1 - remaining / total);
-  $('#start-label').textContent = running ? '일시정지' : '시작하기';
-  $('.play').textContent = running ? 'Ⅱ' : '▶';
+  $('#start-label').textContent = running ? '완료하기' : '시작하기';
+  $('.play').textContent = running ? '✓' : '▶';
+  $('#time').readOnly = running;
+  document.querySelectorAll('.mode').forEach((button) => {
+    button.disabled = running;
+  });
 }
 
 function renderHistory() {
@@ -107,6 +111,8 @@ function saveSession() {
 }
 
 function setMode(nextMode) {
+  if (running) return;
+
   mode = nextMode;
   total = MODES[mode].minutes * 60;
   remaining = total;
@@ -150,11 +156,9 @@ function beginTimer() {
   renderTimer();
 }
 
-function startOrPause() {
+function startOrFinish() {
   if (running) {
-    running = false;
-    clearInterval(interval);
-    renderTimer();
+    finish();
     return;
   }
 
@@ -206,6 +210,8 @@ function copyHistory() {
 }
 
 function applyTimeInput() {
+  if (running) return;
+
   const input = $('#time');
   const match = input.value.trim().match(/^(\d+)(?::(\d+))?$/);
 
@@ -230,15 +236,7 @@ function applyTimeInput() {
   renderTimer();
 }
 
-$('#start').onclick = startOrPause;
-$('#reset').onclick = () => {
-  running = false;
-  clearInterval(interval);
-  remaining = total;
-  sessionTask = '';
-  renderTimer();
-};
-$('#skip').onclick = finish;
+$('#start').onclick = startOrFinish;
 
 document.querySelectorAll('.mode').forEach((button) => {
   button.onclick = () => setMode(button.dataset.mode);
