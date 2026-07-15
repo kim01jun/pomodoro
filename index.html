@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>focusflow — 포모도로 타이머</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <a class="brand" href="#"><span>f</span>focusflow</a>
+        <p id="today">오늘</p>
+      </header>
+
+      <section class="timer" aria-label="Pomodoro timer">
+        <div class="mode-tabs" role="tablist">
+          <button class="mode active" data-mode="pomodoro">집중</button>
+          <button class="mode" data-mode="short">짧은 휴식</button>
+          <button class="mode" data-mode="long">긴 휴식</button>
+        </div>
+        <p class="mode-label" id="mode-label">집중 시간</p>
+        <div class="dial">
+          <svg viewBox="0 0 300 300" aria-hidden="true">
+            <circle class="dial-base" cx="150" cy="150" r="132" />
+            <circle class="dial-progress" id="dial-progress" cx="150" cy="150" r="132" />
+          </svg>
+          <time id="time" datetime="PT25M">25:00</time>
+        </div>
+        <div class="controls">
+          <button class="reset" id="reset" aria-label="타이머 초기화">↺</button>
+          <button class="start" id="start"><span class="play">▶</span><span id="start-label">시작하기</span></button>
+          <button class="skip" id="skip">완료</button>
+        </div>
+      </section>
+
+      <section class="history" aria-labelledby="history-title">
+        <div class="history-heading">
+          <div><p>오늘의 기록</p><h1 id="history-title"><strong id="focus-total">0</strong>분 집중했어요</h1></div>
+          <div class="history-actions"><button id="copy-history" class="clear" hidden>기록 복사</button><button id="clear-history" class="clear" hidden>지우기</button></div>
+        </div>
+        <ul id="session-list" class="session-list"></ul>
+        <p id="empty-history" class="empty">첫 번째 집중 세션을 시작해 보세요.</p>
+      </section>
+    </main>
+    <script src="./app.js"></script>
+  </body>
+</html>
