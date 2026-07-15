@@ -185,9 +185,8 @@ header p { color: var(--muted); font-size: 12px; }
 .session-icon { display: grid; flex: 0 0 auto; width: 22px; height: 22px; color: var(--red); background: #f9e1dc; border-radius: 7px; font-size: 11px; place-items: center; }
 .session.break .session-icon { color: var(--green); background: #e1ebe1; }
 .session-detail { display: grid; min-width: 0; gap: 2px; }
-.session-name, .session-task { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.session-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .session-name { font-weight: 500; }
-.session-task { color: var(--muted); font-size: 10px; }
 .session-time { margin-left: auto; color: var(--muted); font: 11px 'DM Mono'; white-space: nowrap; }
 .empty { margin: 22px 0 2px; color: var(--muted); font-size: 12px; }
 

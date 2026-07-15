@@ -97,10 +97,9 @@ function renderHistory() {
     .map(
       (session) => `
         <li class="session ${session.mode === 'pomodoro' ? '' : 'break'}">
-          <span class="session-icon">${session.mode === 'pomodoro' ? '●' : '☕'}</span>
+          <span class="session-icon">${session.mode === 'pomodoro' ? '⏰' : '☕️'}</span>
           <span class="session-detail">
-            <span class="session-name">${escapeHtml(MODES[session.mode].name)}</span>
-            ${session.task ? `<span class="session-task">${escapeHtml(session.task)}</span>` : ''}
+            <span class="session-name">${session.task ? escapeHtml(session.task) : escapeHtml(MODES[session.mode].name)}</span>
           </span>
           <span class="session-time">${formatDuration(session.seconds)} · ${formatSessionTime(session.timestamp)}</span>
         </li>
@@ -287,7 +286,7 @@ function init() {
 
   elTaskForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    sessionTask = elTaskInput.value.trim() || '집중 시간';
+    sessionTask = elTaskInput.value.trim() || MODES['pomodoro'].name;
     elTaskDialog.close();
     beginTimer();
   });
