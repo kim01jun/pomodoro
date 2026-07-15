@@ -218,6 +218,20 @@ header p { color: var(--muted); font-size: 12px; }
 .dialog-cancel { color: var(--muted); background: transparent; }
 .dialog-submit { color: #fff; background: var(--red); }
 
+/* 몰입 모드 (딤 처리) 스타일 */
+header, .mode-tabs, .mode-label, .history {
+  transition: opacity 0.5s ease, filter 0.5s ease;
+}
+
+.focus-active header,
+.focus-active .mode-tabs,
+.focus-active .mode-label,
+.focus-active .history {
+  opacity: 0.05;
+  filter: blur(1.5px);
+  pointer-events: none;
+}
+
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 @media (max-width: 480px) {

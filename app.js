@@ -85,6 +85,9 @@ function renderTimer() {
   const showCurrentTask = mode === 'pomodoro' && running && Boolean(sessionTask);
   elCurrentTask.hidden = !showCurrentTask;
   elCurrentTaskName.textContent = showCurrentTask ? sessionTask : '';
+
+  // 집중 모드가 동작(running) 중일 때만 주변 요소 딤 처리 클래스 토글
+  document.body.classList.toggle('focus-active', mode === 'pomodoro' && running);
 }
 
 function renderHistory() {
