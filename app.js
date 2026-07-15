@@ -4,7 +4,12 @@ const MODES = {
 };
 
 const $ = (selector) => document.querySelector(selector);
-const storageKey = 'focusflow-sessions';
+const storageKey = 'focusflow-sessions-v2';
+const oldStorageKey = 'focusflow-sessions';
+if (localStorage.getItem(oldStorageKey)) {
+  localStorage.removeItem(oldStorageKey);
+}
+
 const maxDurationSeconds = 99 * 60 + 59;
 
 let mode = 'pomodoro';
@@ -14,9 +19,7 @@ let running = false;
 let interval;
 let sessionTask = '';
 
-function todayKey() {
-  return new Date().toLocaleDateString('sv-SE');
-}
+const todayKey = new Date().toISOString().slice(0, 10);
 
 function displayDate() {
   return new Intl.DateTimeFormat('ko-KR', {
@@ -32,6 +35,14 @@ function formatDuration(seconds) {
   return `${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
 }
 
+function formatSessionTime(timestamp) {
+  return new Date(timestamp).toLocaleTimeString('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+}
+
 function escapeHtml(value) {
   const node = document.createElement('span');
   node.textContent = value;
@@ -40,12 +51,7 @@ function escapeHtml(value) {
 
 // Today's session history is kept only in this browser.
 const sessions = JSON.parse(localStorage.getItem(storageKey) || '[]')
-  .filter((session) => session.date === todayKey())
-  .map((session) => ({
-    ...session,
-    // Older records used minutes, so preserve those too.
-    seconds: session.seconds ?? (session.minutes || 0) * 60,
-  }));
+  .filter((session) => session.timestamp.slice(0, 10) === todayKey);
 
 function renderTimer() {
   $('#time').value = formatDuration(remaining);
@@ -80,7 +86,7 @@ function renderHistory() {
             <span class="session-name">${escapeHtml(MODES[session.mode].name)}</span>
             ${session.task ? `<span class="session-task">${escapeHtml(session.task)}</span>` : ''}
           </span>
-          <span class="session-time">${formatDuration(session.seconds)} · ${session.time}</span>
+          <span class="session-time">${formatDuration(session.seconds)} · ${formatSessionTime(session.timestamp)}</span>
         </li>
       `,
     )
@@ -96,17 +102,11 @@ function saveSession() {
   const elapsedSeconds = total - remaining;
   if (elapsedSeconds < 1) return;
 
-  const now = new Date();
   sessions.push({
-    date: todayKey(),
     mode,
     task: sessionTask,
     seconds: elapsedSeconds,
-    time: now.toLocaleTimeString('ko-KR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }),
+    timestamp: new Date().toISOString(),
   });
 
   localStorage.setItem(storageKey, JSON.stringify(sessions));
@@ -200,7 +200,7 @@ function copyHistory() {
     ...sessions.map((session) => {
       const defaultName = MODES[session.mode].name;
       const name = session.mode === 'pomodoro' ? (session.task || defaultName) : defaultName;
-      return `${session.time} - ${name} ${formatDurationFriendly(session.seconds)}`;
+      return `${formatSessionTime(session.timestamp)} - ${name} ${formatDurationFriendly(session.seconds)}`;
     }),
   ].join('\n');
 
