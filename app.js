@@ -64,7 +64,10 @@ function renderHistory() {
     .filter((session) => session.mode === 'pomodoro')
     .reduce((sum, session) => sum + session.seconds, 0);
 
-  $('#focus-total').textContent = Math.floor(focusSeconds / 60);
+  const minutes = Math.floor(focusSeconds / 60);
+  const seconds = focusSeconds % 60;
+  $('#focus-total-min').textContent = minutes;
+  $('#focus-total-sec').textContent = seconds;
 
   $('#session-list').innerHTML = sessions
     .slice()
