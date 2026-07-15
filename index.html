@@ -19,8 +19,7 @@
       <section class="timer" aria-label="Pomodoro timer">
         <div class="mode-tabs" role="tablist">
           <button class="mode active" data-mode="pomodoro">집중</button>
-          <button class="mode" data-mode="short">짧은 휴식</button>
-          <button class="mode" data-mode="long">긴 휴식</button>
+          <button class="mode" data-mode="break">휴식</button>
         </div>
         <p class="mode-label" id="mode-label">집중 시간</p>
         <div class="dial">
@@ -28,7 +27,7 @@
             <circle class="dial-base" cx="150" cy="150" r="132" />
             <circle class="dial-progress" id="dial-progress" cx="150" cy="150" r="132" />
           </svg>
-          <time id="time" datetime="PT25M">25:00</time>
+          <input class="timer-input" id="time" type="text" value="25:00" inputmode="numeric" aria-label="타이머 시간. 분:초 형식으로 입력하세요. 최대 99분 59초" />
         </div>
         <div class="controls">
           <button class="reset" id="reset" aria-label="타이머 초기화">↺</button>
