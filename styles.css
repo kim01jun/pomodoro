@@ -227,8 +227,10 @@ header p { color: var(--muted); font-size: 12px; }
 .session-entry-text { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .session-time { margin-left: auto; color: var(--muted); font: 12px 'DM Mono'; white-space: nowrap; }
 .session-overtime { color: #b98279; }
-.session-edit { flex: 0 0 auto; padding: 5px 7px; color: var(--muted); background: transparent; border: 0; border-radius: 6px; cursor: pointer; font: 11px 'Noto Sans KR'; text-decoration: underline; }
-.session-edit:hover, .session-edit:focus-visible { color: var(--red); background: #fff3ef; outline: none; }
+.session-actions { display: flex; flex: 0 0 auto; gap: 2px; }
+.session-action { padding: 5px 7px; color: var(--muted); background: transparent; border: 0; border-radius: 6px; cursor: pointer; font: 11px 'Noto Sans KR'; text-decoration: underline; }
+.session-action:hover, .session-action:focus-visible { color: var(--red); background: #fff3ef; outline: none; }
+.session-delete:hover, .session-delete:focus-visible { color: #a23f32; }
 .empty { margin: 22px 0 2px; color: var(--muted); font-size: 13px; }
 
 .entry-dialog { width: min(100% - 40px, 380px); padding: 0; color: var(--ink); background: var(--paper); border: 0; border-radius: 15px; box-shadow: 0 18px 55px #2b292340; }
@@ -249,6 +251,10 @@ header p { color: var(--muted); font-size: 12px; }
 .dialog-actions button { padding: 10px 14px; border: 0; border-radius: 8px; cursor: pointer; font: 500 12px 'Noto Sans KR'; }
 .dialog-cancel { color: var(--muted); background: transparent; }
 .dialog-submit { color: #fff; background: var(--red); }
+.dialog-delete { color: #fff; background: #a23f32; }
+.dialog-delete:hover { background: #873327; }
+.delete-session-name { padding: 11px 12px; margin: -7px 0 10px; overflow: hidden; background: #fff8f5; border: 1px solid #f2d2cb; border-radius: 8px; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.delete-session-description { margin: 0; color: var(--muted); font-size: 12px; }
 
 .toast {
   position: fixed;
@@ -295,6 +301,6 @@ header, .mode-tabs, .mode-label, .history {
   .session { align-items: flex-start; flex-wrap: wrap; }
   .session-detail { flex: 1; }
   .session-time { order: 3; margin-left: 32px; }
-  .session-edit { order: 4; margin-left: auto; }
+  .session-actions { order: 4; margin-left: auto; }
   .entry-dialog input, .entry-dialog textarea { font-size: 16px; }
 }

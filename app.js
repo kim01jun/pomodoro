@@ -38,6 +38,10 @@ const elEditSessionForm = $('#edit-session-form');
 const elEditGoalInput = $('#edit-goal-input');
 const elEditResultInput = $('#edit-result-input');
 const elEditSessionCancel = $('#edit-session-cancel');
+const elDeleteSessionDialog = $('#delete-session-dialog');
+const elDeleteSessionForm = $('#delete-session-form');
+const elDeleteSessionName = $('#delete-session-name');
+const elDeleteSessionCancel = $('#delete-session-cancel');
 const elFocusTotalMin = $('#focus-total-min');
 const elFocusTotalSec = $('#focus-total-sec');
 
@@ -60,6 +64,7 @@ const timerState = {
 
 let copyToastTimeout;
 let editingSessionIndex = null;
+let deletingSessionIndex = null;
 
 const todayKey = new Date().toISOString().slice(0, 10);
 
@@ -165,7 +170,10 @@ function renderHistory() {
             ${overtimeSeconds ? `<span class="session-overtime">+${formatDuration(overtimeSeconds)}</span>` : ''}
             · ${formatSessionTime(session.endedAt)}
           </span>
-          ${session.mode === 'pomodoro' ? `<button class="session-edit" type="button" data-session-index="${sessionIndex}" aria-label="${escapeHtml(session.goal || MODES.pomodoro.name)} 기록 수정">수정</button>` : ''}
+          <span class="session-actions">
+            ${session.mode === 'pomodoro' ? `<button class="session-action session-edit" type="button" data-session-index="${sessionIndex}" aria-label="${escapeHtml(session.goal || MODES.pomodoro.name)} 기록 수정">수정</button>` : ''}
+            <button class="session-action session-delete" type="button" data-session-index="${sessionIndex}" aria-label="${escapeHtml(session.goal || MODES[session.mode].name)} 기록 삭제">삭제</button>
+          </span>
         </li>
       `;
     })
@@ -195,6 +203,37 @@ function closeSessionEditor() {
   editingSessionIndex = null;
   elEditSessionForm.reset();
   elEditSessionDialog.close();
+}
+
+function deleteSession(sessionIndex) {
+  const session = sessions[sessionIndex];
+  if (!session) return;
+
+  deletingSessionIndex = sessionIndex;
+  elDeleteSessionName.textContent = session.goal || MODES[session.mode].name;
+  elDeleteSessionDialog.showModal();
+  setTimeout(() => elDeleteSessionCancel.focus(), 0);
+}
+
+function closeDeleteSessionDialog() {
+  deletingSessionIndex = null;
+  elDeleteSessionDialog.close();
+}
+
+function confirmDeleteSession() {
+  if (!sessions[deletingSessionIndex]) {
+    closeDeleteSessionDialog();
+    return;
+  }
+
+  sessions.splice(deletingSessionIndex, 1);
+  if (sessions.length > 0) {
+    localStorage.setItem(storageKey, JSON.stringify(sessions));
+  } else {
+    localStorage.removeItem(storageKey);
+  }
+  closeDeleteSessionDialog();
+  renderHistory();
 }
 
 function saveSession(result = '') {
@@ -439,6 +478,12 @@ function init() {
   });
   elCompletionInput.addEventListener('input', () => elCompletionInput.setCustomValidity(''));
   elSessionList.addEventListener('click', (event) => {
+    const deleteButton = event.target.closest('.session-delete');
+    if (deleteButton) {
+      deleteSession(Number(deleteButton.dataset.sessionIndex));
+      return;
+    }
+
     const editButton = event.target.closest('.session-edit');
     if (!editButton) return;
     openSessionEditor(Number(editButton.dataset.sessionIndex));
@@ -458,6 +503,14 @@ function init() {
     renderHistory();
   });
   elEditSessionCancel.onclick = closeSessionEditor;
+  elDeleteSessionForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    confirmDeleteSession();
+  });
+  elDeleteSessionCancel.onclick = closeDeleteSessionDialog;
+  elDeleteSessionDialog.addEventListener('cancel', () => {
+    deletingSessionIndex = null;
+  });
   elClearHistory.onclick = () => {
     sessions.length = 0;
     localStorage.removeItem(storageKey);
