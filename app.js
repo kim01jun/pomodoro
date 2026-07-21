@@ -141,7 +141,6 @@ function renderHistory() {
     .slice()
     .reverse()
     .map((session) => {
-      const seconds = getSessionSeconds(session);
       const overtimeSeconds = getSessionOvertimeSeconds(session);
 
       return `
@@ -154,7 +153,7 @@ function renderHistory() {
               : `<span class="session-name">${escapeHtml(MODES[session.mode].name)}</span>`}
           </span>
           <span class="session-time">
-            ${formatDuration(seconds)}
+            ${formatDuration(session.plannedSeconds)}
             ${overtimeSeconds ? `<span class="session-overtime">+${formatDuration(overtimeSeconds)}</span>` : ''}
             · ${formatSessionTime(session.endedAt)}
           </span>

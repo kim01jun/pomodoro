@@ -226,7 +226,7 @@ header p { color: var(--muted); font-size: 12px; }
 .session-entry-label { flex: 0 0 auto; color: var(--ink); font-weight: 700; }
 .session-entry-text { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .session-time { margin-left: auto; color: var(--muted); font: 12px 'DM Mono'; white-space: nowrap; }
-.session-overtime { color: var(--red); }
+.session-overtime { color: #b98279; }
 .empty { margin: 22px 0 2px; color: var(--muted); font-size: 13px; }
 
 .entry-dialog { width: min(100% - 40px, 380px); padding: 0; color: var(--ink); background: var(--paper); border: 0; border-radius: 15px; box-shadow: 0 18px 55px #2b292340; }
