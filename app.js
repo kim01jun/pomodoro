@@ -61,11 +61,13 @@ const timerState = {
   startedAt: null,
   endedAt: null,
   overtime: false,
+  completionSoundPlayed: false,
 };
 
 let copyToastTimeout;
 let editingSessionIndex = null;
 let deletingSessionIndex = null;
+let audioContext = null;
 
 const todayKey = new Date().toISOString().slice(0, 10);
 
@@ -137,6 +139,54 @@ function getElapsedSeconds(at = timerState.endedAt || Date.now()) {
 
 function getOvertimeSeconds(at = timerState.endedAt || Date.now()) {
   return Math.max(0, getElapsedSeconds(at) - timerState.total);
+}
+
+function prepareCompletionSound() {
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) return;
+
+  audioContext ||= new AudioContext();
+  if (audioContext.state === 'suspended') audioContext.resume().catch(() => {});
+}
+
+function playCompletionSound() {
+  if (!audioContext || audioContext.state !== 'running') return;
+
+  const startAt = audioContext.currentTime;
+  const masterGain = audioContext.createGain();
+  const compressor = audioContext.createDynamicsCompressor();
+  masterGain.gain.setValueAtTime(0.0001, startAt);
+  masterGain.gain.exponentialRampToValueAtTime(1, startAt + 0.025);
+  masterGain.gain.setValueAtTime(1, startAt + 5.2);
+  masterGain.gain.exponentialRampToValueAtTime(0.0001, startAt + 5.9);
+  compressor.threshold.setValueAtTime(-12, startAt);
+  compressor.knee.setValueAtTime(8, startAt);
+  compressor.ratio.setValueAtTime(6, startAt);
+  compressor.attack.setValueAtTime(0.003, startAt);
+  compressor.release.setValueAtTime(0.2, startAt);
+  masterGain.connect(compressor);
+  compressor.connect(audioContext.destination);
+
+  const frequencies = [659.25, 783.99, 1046.5]; // E5–G5–C6
+  const motifStarts = [0, 1.15, 2.3, 3.45, 4.6];
+
+  motifStarts.forEach((motifStart) => {
+    frequencies.forEach((frequency, index) => {
+      const noteAt = startAt + motifStart + index * 0.16;
+      const oscillator = audioContext.createOscillator();
+      const noteGain = audioContext.createGain();
+
+      oscillator.type = 'triangle';
+      oscillator.frequency.setValueAtTime(frequency, noteAt);
+      noteGain.gain.setValueAtTime(0.0001, noteAt);
+      noteGain.gain.exponentialRampToValueAtTime(1, noteAt + 0.02);
+      noteGain.gain.exponentialRampToValueAtTime(0.0001, noteAt + 0.75);
+      oscillator.connect(noteGain);
+      noteGain.connect(masterGain);
+      oscillator.start(noteAt);
+      oscillator.stop(noteAt + 0.8);
+    });
+  });
 }
 
 function renderHistory() {
@@ -267,6 +317,7 @@ function setMode(nextMode) {
   timerState.startedAt = null;
   timerState.endedAt = null;
   timerState.overtime = false;
+  timerState.completionSoundPlayed = false;
   timerState.running = false;
   clearInterval(timerState.interval);
 
@@ -307,9 +358,11 @@ function requestFinish() {
 }
 
 function beginTimer() {
+  prepareCompletionSound();
   timerState.startedAt = Date.now();
   timerState.endedAt = null;
   timerState.overtime = false;
+  timerState.completionSoundPlayed = false;
   timerState.running = true;
   timerState.interval = setInterval(() => {
     const elapsedSeconds = getElapsedSeconds();
@@ -317,6 +370,10 @@ function beginTimer() {
     if (elapsedSeconds >= timerState.total) {
       timerState.remaining = 0;
       timerState.overtime = true;
+      if (!timerState.completionSoundPlayed) {
+        timerState.completionSoundPlayed = true;
+        playCompletionSound();
+      }
       renderTimer();
       return;
     }
@@ -429,6 +486,7 @@ function applyTimeInput() {
   timerState.startedAt = null;
   timerState.endedAt = null;
   timerState.overtime = false;
+  timerState.completionSoundPlayed = false;
   renderTimer();
 }
 
