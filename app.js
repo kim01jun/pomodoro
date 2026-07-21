@@ -158,24 +158,26 @@ function renderHistory() {
       return `
         <li class="session ${session.mode === 'pomodoro' ? '' : 'break'}">
           <span class="session-icon">${session.mode === 'pomodoro' ? '⏰' : '☕️'}</span>
-          <span class="session-detail">
-            ${session.mode === 'pomodoro'
-              ? `<span class="session-entry"><span class="session-entry-label">목표</span><span class="session-entry-text">${escapeHtml(session.goal || MODES[session.mode].name)}</span></span>
-                 ${session.result ? `<span class="session-entry"><span class="session-entry-label result">결과</span><span class="session-entry-text">${escapeHtml(session.result)}</span></span>` : ''}`
-              : `<span class="session-name">${escapeHtml(MODES[session.mode].name)}</span>`}
-          </span>
-          <span class="session-durations" aria-label="세션 시간">
-            <span><span class="session-duration-label">시각</span><strong>${formatSessionTime(session.startedAt, false)} ~ ${formatSessionTime(session.endedAt, false)}</strong></span>
-            <span><span class="session-duration-label">계획</span><strong>${formatDuration(session.plannedSeconds)}</strong></span>
-            <span><span class="session-duration-label">실제</span><strong>${formatDuration(getSessionSeconds(session))}</strong></span>
-          </span>
-          <details class="session-menu">
-            <summary aria-label="${escapeHtml(session.goal || MODES[session.mode].name)} 기록 메뉴">•••</summary>
-            <span class="session-menu-items">
-              ${session.mode === 'pomodoro' ? `<button class="session-action session-edit" type="button" data-session-index="${sessionIndex}">수정</button>` : ''}
-              <button class="session-action session-delete" type="button" data-session-index="${sessionIndex}">삭제</button>
-            </span>
-          </details>
+          <div class="session-content">
+            <div class="session-header">
+              <strong class="session-title">${escapeHtml(session.goal || MODES[session.mode].name)}</strong>
+              <details class="session-menu">
+                <summary aria-label="${escapeHtml(session.goal || MODES[session.mode].name)} 기록 메뉴">•••</summary>
+                <span class="session-menu-items">
+                  ${session.mode === 'pomodoro' ? `<button class="session-action session-edit" type="button" data-session-index="${sessionIndex}">수정</button>` : ''}
+                  <button class="session-action session-delete" type="button" data-session-index="${sessionIndex}">삭제</button>
+                </span>
+              </details>
+            </div>
+            ${session.mode === 'pomodoro' && session.result
+              ? `<p class="session-result">${escapeHtml(session.result)}</p>`
+              : ''}
+            <div class="session-meta" aria-label="세션 시간">
+              <span>${formatSessionTime(session.startedAt)}–${formatSessionTime(session.endedAt)}</span>
+              <span>계획 ${formatDurationFriendly(session.plannedSeconds)}</span>
+              <span>실제 ${formatDurationFriendly(getSessionSeconds(session))}</span>
+            </div>
+          </div>
         </li>
       `;
     })

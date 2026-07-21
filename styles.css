@@ -217,20 +217,17 @@ header p { color: var(--muted); font-size: 12px; }
 .clear { color: var(--muted); background: transparent; border: 0; cursor: pointer; font: 12px 'Noto Sans KR'; text-decoration: underline; }
 
 .session-list { display: grid; gap: 9px; padding: 0; margin: 22px 0 0; list-style: none; }
-.session { display: flex; gap: 10px; align-items: center; padding: 13px 12px; background: white; border: 1px solid var(--line); border-radius: 9px; font-size: 14px; }
-.session-icon { display: grid; flex: 0 0 auto; width: 22px; height: 22px; color: var(--red); background: #f9e1dc; border-radius: 7px; font-size: 11px; place-items: center; }
+.session { display: flex; gap: 11px; align-items: flex-start; padding: 14px 13px; background: white; border: 1px solid var(--line); border-radius: 9px; font-size: 14px; }
+.session-icon { display: grid; flex: 0 0 auto; width: 25px; height: 25px; color: var(--red); background: #f9e1dc; border-radius: 7px; font-size: 12px; place-items: center; }
 .session.break .session-icon { color: var(--green); background: #e1ebe1; }
-.session-detail { display: grid; min-width: 0; gap: 2px; }
-.session-name { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.session-name { font-weight: 500; }
-.session-entry { display: flex; min-width: 0; gap: 6px; color: var(--muted); font-size: 13px; }
-.session-entry-label { flex: 0 0 auto; color: var(--ink); font-weight: 700; }
-.session-entry-text { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.session-durations { display: grid; flex: 0 0 auto; gap: 2px; margin-left: auto; }
-.session-durations > span { display: flex; align-items: center; justify-content: space-between; gap: 7px; }
-.session-duration-label { color: var(--muted); font-size: 10px; }
-.session-durations strong { color: var(--ink); font: 500 11px 'DM Mono'; white-space: nowrap; }
-.session-menu { position: relative; flex: 0 0 auto; }
+.session-content { min-width: 0; flex: 1; }
+.session-header { display: flex; min-width: 0; align-items: center; gap: 8px; }
+.session-title { overflow: hidden; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.session-result { margin: 4px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.session-meta { display: flex; flex-wrap: wrap; gap: 4px 0; margin-top: 9px; color: var(--muted); font: 500 10px 'DM Mono'; }
+.session-meta span { white-space: nowrap; }
+.session-meta span + span::before { margin: 0 7px; color: #c4c0b7; content: '·'; }
+.session-menu { position: relative; flex: 0 0 auto; margin: -3px -5px -3px auto; }
 .session-menu summary { display: grid; width: 28px; height: 28px; color: var(--muted); border-radius: 7px; cursor: pointer; font: 700 11px 'DM Sans'; letter-spacing: 1px; list-style: none; place-items: center; }
 .session-menu summary::-webkit-details-marker { display: none; }
 .session-menu summary:hover, .session-menu summary:focus-visible, .session-menu[open] summary { color: var(--ink); background: #f3f0e9; outline: none; }
@@ -305,10 +302,6 @@ header, .mode-tabs, .mode-label, .history {
   .dial { width: 250px; height: 250px; }
   .timer-input { font-size: 57px; }
   .history { padding-inline: 21px; }
-  .session { align-items: flex-start; flex-wrap: wrap; }
-  .session-detail { flex: 1; }
-  .session-durations { order: 3; width: calc(100% - 32px); margin-left: 32px; padding-top: 7px; border-top: 1px solid var(--line); }
-  .session-durations > span { justify-content: flex-start; }
-  .session-menu { order: 2; }
+  .session-meta { line-height: 1.5; }
   .entry-dialog input, .entry-dialog textarea { font-size: 16px; }
 }
