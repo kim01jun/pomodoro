@@ -277,17 +277,13 @@ function setMode(nextMode) {
 }
 
 function finish(result = '') {
+  const nextMode = timerState.mode === 'pomodoro' ? 'break' : 'pomodoro';
+
   timerState.running = false;
   clearInterval(timerState.interval);
   saveSession(result);
-
-  timerState.remaining = timerState.total;
-  timerState.sessionGoal = '';
-  timerState.startedAt = null;
-  timerState.endedAt = null;
-  timerState.overtime = false;
   document.title = 'focusflow — 세션 완료';
-  renderTimer();
+  setMode(nextMode);
 }
 
 function requestFinish() {
