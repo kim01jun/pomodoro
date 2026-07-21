@@ -71,6 +71,17 @@
         <div class="dialog-actions"><button class="dialog-submit" type="submit">기록 완료</button></div>
       </form>
     </dialog>
+    <dialog class="entry-dialog" id="edit-session-dialog" aria-labelledby="edit-session-dialog-title">
+      <form id="edit-session-form">
+        <p class="dialog-kicker">집중 기록 수정</p>
+        <h2 id="edit-session-dialog-title">목표와 결과를 수정하세요</h2>
+        <label class="edit-session-label" for="edit-goal-input">목표</label>
+        <input id="edit-goal-input" type="text" maxlength="80" autocomplete="off" required />
+        <label class="edit-session-label" for="edit-result-input">결과</label>
+        <textarea id="edit-result-input" maxlength="200" required></textarea>
+        <div class="dialog-actions"><button class="dialog-cancel" id="edit-session-cancel" type="button">취소</button><button class="dialog-submit" type="submit">수정 완료</button></div>
+      </form>
+    </dialog>
     <dialog class="entry-dialog" id="copy-dialog" aria-labelledby="copy-dialog-title">
       <form method="dialog">
         <p class="dialog-kicker">오늘의 기록</p>

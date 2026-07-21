@@ -33,6 +33,11 @@ const elCompletionDialog = $('#completion-dialog');
 const elCompletionForm = $('#completion-form');
 const elCompletionInput = $('#completion-input');
 const elCompletionGoalName = $('#completion-goal-name');
+const elEditSessionDialog = $('#edit-session-dialog');
+const elEditSessionForm = $('#edit-session-form');
+const elEditGoalInput = $('#edit-goal-input');
+const elEditResultInput = $('#edit-result-input');
+const elEditSessionCancel = $('#edit-session-cancel');
 const elFocusTotalMin = $('#focus-total-min');
 const elFocusTotalSec = $('#focus-total-sec');
 
@@ -54,6 +59,7 @@ const timerState = {
 };
 
 let copyToastTimeout;
+let editingSessionIndex = null;
 
 const todayKey = new Date().toISOString().slice(0, 10);
 
@@ -141,8 +147,9 @@ function renderHistory() {
   elSessionList.innerHTML = sessions
     .slice()
     .reverse()
-    .map((session) => {
+    .map((session, reversedIndex) => {
       const overtimeSeconds = getSessionOvertimeSeconds(session);
+      const sessionIndex = sessions.length - 1 - reversedIndex;
 
       return `
         <li class="session ${session.mode === 'pomodoro' ? '' : 'break'}">
@@ -158,6 +165,7 @@ function renderHistory() {
             ${overtimeSeconds ? `<span class="session-overtime">+${formatDuration(overtimeSeconds)}</span>` : ''}
             · ${formatSessionTime(session.endedAt)}
           </span>
+          ${session.mode === 'pomodoro' ? `<button class="session-edit" type="button" data-session-index="${sessionIndex}" aria-label="${escapeHtml(session.goal || MODES.pomodoro.name)} 기록 수정">수정</button>` : ''}
         </li>
       `;
     })
@@ -167,6 +175,26 @@ function renderHistory() {
   elEmptyHistory.hidden = hasSessions;
   elClearHistory.hidden = !hasSessions;
   elCopyHistory.hidden = !hasSessions;
+}
+
+function openSessionEditor(sessionIndex) {
+  const session = sessions[sessionIndex];
+  if (!session || session.mode !== 'pomodoro') return;
+
+  editingSessionIndex = sessionIndex;
+  elEditGoalInput.value = session.goal || MODES.pomodoro.name;
+  elEditResultInput.value = session.result || '';
+  elEditSessionDialog.showModal();
+  setTimeout(() => {
+    elEditGoalInput.focus();
+    elEditGoalInput.select();
+  }, 0);
+}
+
+function closeSessionEditor() {
+  editingSessionIndex = null;
+  elEditSessionForm.reset();
+  elEditSessionDialog.close();
 }
 
 function saveSession(result = '') {
@@ -410,6 +438,26 @@ function init() {
     finish(result);
   });
   elCompletionInput.addEventListener('input', () => elCompletionInput.setCustomValidity(''));
+  elSessionList.addEventListener('click', (event) => {
+    const editButton = event.target.closest('.session-edit');
+    if (!editButton) return;
+    openSessionEditor(Number(editButton.dataset.sessionIndex));
+  });
+  elEditSessionForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const session = sessions[editingSessionIndex];
+    if (!session || session.mode !== 'pomodoro') {
+      closeSessionEditor();
+      return;
+    }
+
+    session.goal = elEditGoalInput.value.trim();
+    session.result = elEditResultInput.value.trim();
+    localStorage.setItem(storageKey, JSON.stringify(sessions));
+    closeSessionEditor();
+    renderHistory();
+  });
+  elEditSessionCancel.onclick = closeSessionEditor;
   elClearHistory.onclick = () => {
     sessions.length = 0;
     localStorage.removeItem(storageKey);

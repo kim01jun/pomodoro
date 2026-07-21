@@ -227,6 +227,8 @@ header p { color: var(--muted); font-size: 12px; }
 .session-entry-text { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .session-time { margin-left: auto; color: var(--muted); font: 12px 'DM Mono'; white-space: nowrap; }
 .session-overtime { color: #b98279; }
+.session-edit { flex: 0 0 auto; padding: 5px 7px; color: var(--muted); background: transparent; border: 0; border-radius: 6px; cursor: pointer; font: 11px 'Noto Sans KR'; text-decoration: underline; }
+.session-edit:hover, .session-edit:focus-visible { color: var(--red); background: #fff3ef; outline: none; }
 .empty { margin: 22px 0 2px; color: var(--muted); font-size: 13px; }
 
 .entry-dialog { width: min(100% - 40px, 380px); padding: 0; color: var(--ink); background: var(--paper); border: 0; border-radius: 15px; box-shadow: 0 18px 55px #2b292340; }
@@ -241,6 +243,8 @@ header p { color: var(--muted); font-size: 12px; }
 .completion-goal span { color: var(--ink); font-size: 10px; font-weight: 700; }
 .completion-goal strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 .completion-result-label { display: block; margin: 0 0 6px; color: var(--ink); font-size: 10px; font-weight: 700; }
+.edit-session-label { display: block; margin: 14px 0 6px; color: var(--ink); font-size: 10px; font-weight: 700; }
+.edit-session-label:first-of-type { margin-top: 0; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .dialog-actions button { padding: 10px 14px; border: 0; border-radius: 8px; cursor: pointer; font: 500 12px 'Noto Sans KR'; }
 .dialog-cancel { color: var(--muted); background: transparent; }
@@ -288,5 +292,9 @@ header, .mode-tabs, .mode-label, .history {
   .dial { width: 250px; height: 250px; }
   .timer-input { font-size: 57px; }
   .history { padding-inline: 21px; }
+  .session { align-items: flex-start; flex-wrap: wrap; }
+  .session-detail { flex: 1; }
+  .session-time { order: 3; margin-left: 32px; }
+  .session-edit { order: 4; margin-left: auto; }
   .entry-dialog input, .entry-dialog textarea { font-size: 16px; }
 }
