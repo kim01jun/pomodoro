@@ -95,10 +95,6 @@ function getSessionSeconds(session) {
   return Math.max(0, Math.floor((endedAt - startedAt) / 1000));
 }
 
-function getSessionOvertimeSeconds(session) {
-  return Math.max(0, getSessionSeconds(session) - session.plannedSeconds);
-}
-
 // Today's session history is kept only in this browser.
 const sessions = JSON.parse(localStorage.getItem(storageKey) || '[]')
   .filter((session) => session.endedAt)
@@ -153,7 +149,6 @@ function renderHistory() {
     .slice()
     .reverse()
     .map((session, reversedIndex) => {
-      const overtimeSeconds = getSessionOvertimeSeconds(session);
       const sessionIndex = sessions.length - 1 - reversedIndex;
 
       return `
@@ -165,15 +160,17 @@ function renderHistory() {
                  ${session.result ? `<span class="session-entry"><span class="session-entry-label result">결과</span><span class="session-entry-text">${escapeHtml(session.result)}</span></span>` : ''}`
               : `<span class="session-name">${escapeHtml(MODES[session.mode].name)}</span>`}
           </span>
-          <span class="session-time">
-            ${formatDuration(session.plannedSeconds)}
-            ${overtimeSeconds ? `<span class="session-overtime">+${formatDuration(overtimeSeconds)}</span>` : ''}
-            · ${formatSessionTime(session.endedAt)}
+          <span class="session-durations" aria-label="세션 시간">
+            <span><span class="session-duration-label">계획</span><strong>${formatDuration(session.plannedSeconds)}</strong></span>
+            <span><span class="session-duration-label">실제</span><strong>${formatDuration(getSessionSeconds(session))}</strong></span>
           </span>
-          <span class="session-actions">
-            ${session.mode === 'pomodoro' ? `<button class="session-action session-edit" type="button" data-session-index="${sessionIndex}" aria-label="${escapeHtml(session.goal || MODES.pomodoro.name)} 기록 수정">수정</button>` : ''}
-            <button class="session-action session-delete" type="button" data-session-index="${sessionIndex}" aria-label="${escapeHtml(session.goal || MODES[session.mode].name)} 기록 삭제">삭제</button>
-          </span>
+          <details class="session-menu">
+            <summary aria-label="${escapeHtml(session.goal || MODES[session.mode].name)} 기록 메뉴">•••</summary>
+            <span class="session-menu-items">
+              ${session.mode === 'pomodoro' ? `<button class="session-action session-edit" type="button" data-session-index="${sessionIndex}">수정</button>` : ''}
+              <button class="session-action session-delete" type="button" data-session-index="${sessionIndex}">삭제</button>
+            </span>
+          </details>
         </li>
       `;
     })
@@ -478,15 +475,29 @@ function init() {
   });
   elCompletionInput.addEventListener('input', () => elCompletionInput.setCustomValidity(''));
   elSessionList.addEventListener('click', (event) => {
+    const menuSummary = event.target.closest('.session-menu summary');
+    if (menuSummary) {
+      elSessionList.querySelectorAll('.session-menu[open]').forEach((menu) => {
+        if (menu !== menuSummary.parentElement) menu.removeAttribute('open');
+      });
+      return;
+    }
+
     const deleteButton = event.target.closest('.session-delete');
     if (deleteButton) {
+      deleteButton.closest('.session-menu')?.removeAttribute('open');
       deleteSession(Number(deleteButton.dataset.sessionIndex));
       return;
     }
 
     const editButton = event.target.closest('.session-edit');
     if (!editButton) return;
+    editButton.closest('.session-menu')?.removeAttribute('open');
     openSessionEditor(Number(editButton.dataset.sessionIndex));
+  });
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('.session-menu')) return;
+    elSessionList.querySelectorAll('.session-menu[open]').forEach((menu) => menu.removeAttribute('open'));
   });
   elEditSessionForm.addEventListener('submit', (event) => {
     event.preventDefault();
