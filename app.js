@@ -9,6 +9,7 @@ const $ = (selector) => document.querySelector(selector);
 const elTime = $('#time');
 const elOvertime = $('#overtime');
 const elOvertimeTime = $('#overtime-time');
+const elOvertimeMessage = $('#overtime-message');
 const elDialProgress = $('#dial-progress');
 const elStart = $('#start');
 const elStartLabel = $('#start-label');
@@ -106,6 +107,9 @@ function renderTimer() {
   elTime.hidden = timerState.overtime;
   elOvertime.hidden = !timerState.overtime;
   elOvertimeTime.textContent = `+${formatDuration(overtimeSeconds)}`;
+  elOvertimeMessage.textContent = timerState.mode === 'pomodoro'
+    ? '작업을 마치고 완료해 주세요'
+    : '휴식을 마치고 완료해 주세요';
   elDialProgress.style.strokeDashoffset = timerState.overtime
     ? 0
     : DIAL_CIRCUMFERENCE * (1 - timerState.remaining / timerState.total);
@@ -313,12 +317,6 @@ function beginTimer() {
 
     if (elapsedSeconds >= timerState.total) {
       timerState.remaining = 0;
-      if (timerState.mode === 'break') {
-        timerState.endedAt = Date.now();
-        finish();
-        return;
-      }
-
       timerState.overtime = true;
       renderTimer();
       return;

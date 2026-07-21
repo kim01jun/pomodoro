@@ -145,6 +145,7 @@ header p { color: var(--muted); font-size: 12px; }
 
 .overtime[hidden] { display: none; }
 .overtime span { margin-bottom: 4px; color: var(--red); font-size: 12px; font-weight: 700; }
+.theme-break .overtime span { color: var(--green); }
 .overtime strong { font: 500 53px 'DM Mono'; letter-spacing: -4px; }
 .overtime small { margin-top: 9px; color: var(--muted); font-size: 11px; line-height: 1.5; white-space: nowrap; }
 .focus-overtime .dial-progress { animation: overtime-pulse 1.8s ease-in-out infinite; }
