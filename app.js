@@ -36,25 +36,24 @@ const elCompletionGoalName = $('#completion-goal-name');
 const elFocusTotalMin = $('#focus-total-min');
 const elFocusTotalSec = $('#focus-total-sec');
 
-const storageKey = 'focusflow-sessions-v2';
-const oldStorageKey = 'focusflow-sessions';
-if (localStorage.getItem(oldStorageKey)) {
-  localStorage.removeItem(oldStorageKey);
-}
+const storageKey = 'focusflow-sessions-v3';
 
 const DIAL_CIRCUMFERENCE = 829.38; // 2 * PI * r (r = 132)
 const maxDurationSeconds = 99 * 60 + 59;
 
-let mode = 'pomodoro';
-let total = 25 * 60;
-let remaining = total;
-let running = false;
-let interval;
+const timerState = {
+  mode: 'pomodoro',
+  total: MODES.pomodoro.minutes * 60,
+  remaining: MODES.pomodoro.minutes * 60,
+  running: false,
+  interval: null,
+  sessionGoal: '',
+  startedAt: null,
+  endedAt: null,
+  overtime: false,
+};
+
 let copyToastTimeout;
-let sessionGoal = '';
-let startedAt = null;
-let completedAt = null;
-let overtime = false;
 
 const todayKey = new Date().toISOString().slice(0, 10);
 
@@ -78,49 +77,60 @@ function escapeHtml(value) {
   return node.innerHTML;
 }
 
+function getSessionSeconds(session) {
+  const startedAt = new Date(session.startedAt).getTime();
+  const endedAt = new Date(session.endedAt).getTime();
+  return Math.max(0, Math.floor((endedAt - startedAt) / 1000));
+}
+
+function getSessionOvertimeSeconds(session) {
+  return Math.max(0, getSessionSeconds(session) - session.plannedSeconds);
+}
+
 // Today's session history is kept only in this browser.
 const sessions = JSON.parse(localStorage.getItem(storageKey) || '[]')
-  .filter((session) => session.timestamp && session.timestamp.slice(0, 10) === todayKey);
+  .filter((session) => session.endedAt)
+  .filter((session) => session.endedAt.slice(0, 10) === todayKey);
 
 function renderTimer() {
   const overtimeSeconds = getOvertimeSeconds();
-  elTime.value = formatDuration(remaining);
-  elTime.hidden = overtime;
-  elOvertime.hidden = !overtime;
+  elTime.value = formatDuration(timerState.remaining);
+  elTime.hidden = timerState.overtime;
+  elOvertime.hidden = !timerState.overtime;
   elOvertimeTime.textContent = `+${formatDuration(overtimeSeconds)}`;
-  elDialProgress.style.strokeDashoffset = overtime
+  elDialProgress.style.strokeDashoffset = timerState.overtime
     ? 0
-    : DIAL_CIRCUMFERENCE * (1 - remaining / total);
-  elStartLabel.textContent = running ? '완료하기' : '시작하기';
-  elPlay.textContent = running ? '✓' : '▶';
-  elTime.readOnly = running;
-  elStart.classList.toggle('running', running);
+    : DIAL_CIRCUMFERENCE * (1 - timerState.remaining / timerState.total);
+  elStartLabel.textContent = timerState.running ? '완료하기' : '시작하기';
+  elPlay.textContent = timerState.running ? '✓' : '▶';
+  elTime.readOnly = timerState.running;
+  elStart.classList.toggle('running', timerState.running);
   elModeButtons.forEach((button) => {
-    button.disabled = running;
+    button.disabled = timerState.running;
   });
 
-  const showCurrentGoal = mode === 'pomodoro' && running && Boolean(sessionGoal);
+  const showCurrentGoal = timerState.mode === 'pomodoro' && timerState.running && Boolean(timerState.sessionGoal);
   elCurrentGoal.hidden = !showCurrentGoal;
-  elCurrentGoalName.textContent = showCurrentGoal ? sessionGoal : '';
+  elCurrentGoalName.textContent = showCurrentGoal ? timerState.sessionGoal : '';
 
   // 집중 모드가 동작(running) 중일 때만 주변 요소 딤 처리 클래스 토글
-  document.body.classList.toggle('focus-active', mode === 'pomodoro' && running);
-  document.body.classList.toggle('focus-overtime', overtime);
+  document.body.classList.toggle('focus-active', timerState.mode === 'pomodoro' && timerState.running);
+  document.body.classList.toggle('focus-overtime', timerState.overtime);
 }
 
-function getElapsedSeconds(at = completedAt || Date.now()) {
-  if (!startedAt) return 0;
-  return Math.max(0, Math.floor((at - startedAt) / 1000));
+function getElapsedSeconds(at = timerState.endedAt || Date.now()) {
+  if (!timerState.startedAt) return 0;
+  return Math.max(0, Math.floor((at - timerState.startedAt) / 1000));
 }
 
-function getOvertimeSeconds(at = completedAt || Date.now()) {
-  return Math.max(0, getElapsedSeconds(at) - total);
+function getOvertimeSeconds(at = timerState.endedAt || Date.now()) {
+  return Math.max(0, getElapsedSeconds(at) - timerState.total);
 }
 
 function renderHistory() {
   const focusSeconds = sessions
     .filter((session) => session.mode === 'pomodoro')
-    .reduce((sum, session) => sum + session.seconds, 0);
+    .reduce((sum, session) => sum + getSessionSeconds(session), 0);
 
   const minutes = Math.floor(focusSeconds / 60);
   const seconds = focusSeconds % 60;
@@ -130,8 +140,11 @@ function renderHistory() {
   elSessionList.innerHTML = sessions
     .slice()
     .reverse()
-    .map(
-      (session) => `
+    .map((session) => {
+      const seconds = getSessionSeconds(session);
+      const overtimeSeconds = getSessionOvertimeSeconds(session);
+
+      return `
         <li class="session ${session.mode === 'pomodoro' ? '' : 'break'}">
           <span class="session-icon">${session.mode === 'pomodoro' ? '⏰' : '☕️'}</span>
           <span class="session-detail">
@@ -141,13 +154,13 @@ function renderHistory() {
               : `<span class="session-name">${escapeHtml(MODES[session.mode].name)}</span>`}
           </span>
           <span class="session-time">
-            ${formatDuration(session.seconds)}
-            ${session.overtimeSeconds ? `<span class="session-overtime">+${formatDuration(session.overtimeSeconds)}</span>` : ''}
-            · ${formatSessionTime(session.timestamp)}
+            ${formatDuration(seconds)}
+            ${overtimeSeconds ? `<span class="session-overtime">+${formatDuration(overtimeSeconds)}</span>` : ''}
+            · ${formatSessionTime(session.endedAt)}
           </span>
         </li>
-      `,
-    )
+      `;
+    })
     .join('');
 
   const hasSessions = sessions.length > 0;
@@ -161,14 +174,12 @@ function saveSession(result = '') {
   if (elapsedSeconds < 1) return;
 
   sessions.push({
-    mode,
-    goal: sessionGoal,
+    mode: timerState.mode,
+    goal: timerState.sessionGoal,
     result,
-    seconds: elapsedSeconds,
-    plannedSeconds: total,
-    overtimeSeconds: getOvertimeSeconds(),
-    startedAt: new Date(startedAt).toISOString(),
-    timestamp: new Date(completedAt || Date.now()).toISOString(),
+    plannedSeconds: timerState.total,
+    startedAt: new Date(timerState.startedAt).toISOString(),
+    endedAt: new Date(timerState.endedAt || Date.now()).toISOString(),
   });
 
   localStorage.setItem(storageKey, JSON.stringify(sessions));
@@ -176,52 +187,52 @@ function saveSession(result = '') {
 }
 
 function setMode(nextMode) {
-  if (running) return;
+  if (timerState.running) return;
 
-  mode = nextMode;
-  total = MODES[mode].minutes * 60;
-  remaining = total;
-  sessionGoal = '';
-  startedAt = null;
-  completedAt = null;
-  overtime = false;
-  running = false;
-  clearInterval(interval);
+  timerState.mode = nextMode;
+  timerState.total = MODES[timerState.mode].minutes * 60;
+  timerState.remaining = timerState.total;
+  timerState.sessionGoal = '';
+  timerState.startedAt = null;
+  timerState.endedAt = null;
+  timerState.overtime = false;
+  timerState.running = false;
+  clearInterval(timerState.interval);
 
-  elModeLabel.textContent = MODES[mode].label;
-  document.body.className = 'theme-' + mode;
+  elModeLabel.textContent = MODES[timerState.mode].label;
+  document.body.className = 'theme-' + timerState.mode;
   elModeButtons.forEach((button) => {
-    button.classList.toggle('active', button.dataset.mode === mode);
+    button.classList.toggle('active', button.dataset.mode === timerState.mode);
   });
 
   renderTimer();
 }
 
 function finish(result = '') {
-  running = false;
-  clearInterval(interval);
+  timerState.running = false;
+  clearInterval(timerState.interval);
   saveSession(result);
 
-  remaining = total;
-  sessionGoal = '';
-  startedAt = null;
-  completedAt = null;
-  overtime = false;
+  timerState.remaining = timerState.total;
+  timerState.sessionGoal = '';
+  timerState.startedAt = null;
+  timerState.endedAt = null;
+  timerState.overtime = false;
   document.title = 'focusflow — 세션 완료';
   renderTimer();
 }
 
 function requestFinish() {
-  if (mode !== 'pomodoro') {
+  if (timerState.mode !== 'pomodoro') {
     finish();
     return;
   }
 
-  completedAt = Date.now();
-  running = false;
-  clearInterval(interval);
+  timerState.endedAt = Date.now();
+  timerState.running = false;
+  clearInterval(timerState.interval);
   renderTimer();
-  elCompletionGoalName.textContent = sessionGoal;
+  elCompletionGoalName.textContent = timerState.sessionGoal;
   elCompletionInput.value = '';
   elCompletionInput.setCustomValidity('');
   elCompletionDialog.showModal();
@@ -229,27 +240,27 @@ function requestFinish() {
 }
 
 function beginTimer() {
-  startedAt = Date.now();
-  completedAt = null;
-  overtime = false;
-  running = true;
-  interval = setInterval(() => {
+  timerState.startedAt = Date.now();
+  timerState.endedAt = null;
+  timerState.overtime = false;
+  timerState.running = true;
+  timerState.interval = setInterval(() => {
     const elapsedSeconds = getElapsedSeconds();
 
-    if (elapsedSeconds >= total) {
-      remaining = 0;
-      if (mode === 'break') {
-        completedAt = Date.now();
+    if (elapsedSeconds >= timerState.total) {
+      timerState.remaining = 0;
+      if (timerState.mode === 'break') {
+        timerState.endedAt = Date.now();
         finish();
         return;
       }
 
-      overtime = true;
+      timerState.overtime = true;
       renderTimer();
       return;
     }
 
-    remaining = total - elapsedSeconds;
+    timerState.remaining = timerState.total - elapsedSeconds;
     renderTimer();
   }, 1000);
 
@@ -257,12 +268,12 @@ function beginTimer() {
 }
 
 function startOrFinish() {
-  if (running) {
+  if (timerState.running) {
     requestFinish();
     return;
   }
 
-  if (mode === 'pomodoro' && !sessionGoal) {
+  if (timerState.mode === 'pomodoro' && !timerState.sessionGoal) {
     elGoalInput.value = '';
     elGoalDialog.showModal();
     setTimeout(() => elGoalInput.focus(), 0);
@@ -288,12 +299,11 @@ function formatDurationFriendly(seconds) {
 function copyHistory() {
   const focusSeconds = sessions
     .filter((session) => session.mode === 'pomodoro')
-    .reduce((sum, session) => sum + session.seconds, 0);
+    .reduce((sum, session) => sum + getSessionSeconds(session), 0);
 
   const sessionBlocks = sessions.map((session) => {
-    const endTime = new Date(session.timestamp);
-    const startTime = new Date(endTime.getTime() - session.seconds * 1000);
-    const timeRange = `${formatSessionTime(startTime)} ~ ${formatSessionTime(endTime)}`;
+    const overtimeSeconds = getSessionOvertimeSeconds(session);
+    const timeRange = `${formatSessionTime(session.startedAt)} ~ ${formatSessionTime(session.endedAt)}`;
 
     if (session.mode === 'break') return `${timeRange}\n휴식`;
 
@@ -301,7 +311,7 @@ function copyHistory() {
       timeRange,
       `목표: ${session.goal || MODES.pomodoro.name}`,
       `결과: ${session.result || ''}`,
-      session.overtimeSeconds ? `추가 집중: ${formatDurationFriendly(session.overtimeSeconds)}` : '',
+      overtimeSeconds ? `추가 집중: ${formatDurationFriendly(overtimeSeconds)}` : '',
     ].filter(Boolean).join('\n');
   });
 
@@ -332,7 +342,7 @@ function copyHistory() {
 }
 
 function applyTimeInput() {
-  if (running) return;
+  if (timerState.running) return;
 
   const input = elTime;
   const match = input.value.trim().match(/^(\d+)(?::(\d+))?$/);
@@ -350,14 +360,14 @@ function applyTimeInput() {
     return;
   }
 
-  running = false;
-  clearInterval(interval);
-  total = duration;
-  remaining = duration;
-  sessionGoal = '';
-  startedAt = null;
-  completedAt = null;
-  overtime = false;
+  timerState.running = false;
+  clearInterval(timerState.interval);
+  timerState.total = duration;
+  timerState.remaining = duration;
+  timerState.sessionGoal = '';
+  timerState.startedAt = null;
+  timerState.endedAt = null;
+  timerState.overtime = false;
   renderTimer();
 }
 
@@ -379,7 +389,7 @@ function init() {
 
   elGoalForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    sessionGoal = elGoalInput.value.trim() || MODES['pomodoro'].name;
+    timerState.sessionGoal = elGoalInput.value.trim() || MODES.pomodoro.name;
     elGoalDialog.close();
     beginTimer();
   });
@@ -408,7 +418,7 @@ function init() {
   elCopyHistory.onclick = copyHistory;
 
   elToday.textContent = todayKey;
-  document.body.className = 'theme-' + mode;
+  document.body.className = 'theme-' + timerState.mode;
   renderTimer();
   renderHistory();
 }
