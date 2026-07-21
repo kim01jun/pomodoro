@@ -130,7 +130,7 @@ header p { color: var(--muted); font-size: 12px; }
   text-align: center;
 }
 
-.timer-input:focus { background: #f8f6f0; border-radius: 50%; }
+.timer-input:focus:not(:read-only) { background: #f8f6f0; border-radius: 50%; }
 .timer-input:read-only { cursor: default; }
 .timer-input[hidden] { display: none; }
 
