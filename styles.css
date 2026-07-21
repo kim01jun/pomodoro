@@ -132,6 +132,26 @@ header p { color: var(--muted); font-size: 12px; }
 
 .timer-input:focus { background: #f8f6f0; border-radius: 50%; }
 .timer-input:read-only { cursor: default; }
+.timer-input[hidden] { display: none; }
+
+.overtime {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.overtime[hidden] { display: none; }
+.overtime span { margin-bottom: 4px; color: var(--red); font-size: 12px; font-weight: 700; }
+.overtime strong { font: 500 53px 'DM Mono'; letter-spacing: -4px; }
+.overtime small { margin-top: 9px; color: var(--muted); font-size: 11px; line-height: 1.5; white-space: nowrap; }
+.focus-overtime .dial-progress { animation: overtime-pulse 1.8s ease-in-out infinite; }
+
+@keyframes overtime-pulse {
+  50% { opacity: .45; }
+}
 .controls { display: flex; justify-content: center; margin-top: 8px; }
 
 .start {
@@ -206,6 +226,7 @@ header p { color: var(--muted); font-size: 12px; }
 .session-entry-label { flex: 0 0 auto; color: var(--ink); font-weight: 700; }
 .session-entry-text { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .session-time { margin-left: auto; color: var(--muted); font: 12px 'DM Mono'; white-space: nowrap; }
+.session-overtime { color: var(--red); }
 .empty { margin: 22px 0 2px; color: var(--muted); font-size: 13px; }
 
 .entry-dialog { width: min(100% - 40px, 380px); padding: 0; color: var(--ink); background: var(--paper); border: 0; border-radius: 15px; box-shadow: 0 18px 55px #2b292340; }

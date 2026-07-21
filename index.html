@@ -32,6 +32,11 @@
             <circle class="dial-progress" id="dial-progress" cx="150" cy="150" r="132" />
           </svg>
           <input class="timer-input" id="time" type="text" value="25:00" inputmode="numeric" aria-label="타이머 시간. 분:초 형식으로 입력하세요. 최대 99분 59초" />
+          <div class="overtime" id="overtime" aria-live="polite" hidden>
+            <span>마무리 중</span>
+            <strong id="overtime-time">+00:00</strong>
+            <small>작업을 마치고 완료해 주세요</small>
+          </div>
         </div>
         <div class="controls">
           <button class="start" id="start"><span class="play">▶</span><span id="start-label">시작하기</span></button>

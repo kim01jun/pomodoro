@@ -7,6 +7,8 @@ const $ = (selector) => document.querySelector(selector);
 
 // DOM Elements Cache
 const elTime = $('#time');
+const elOvertime = $('#overtime');
+const elOvertimeTime = $('#overtime-time');
 const elDialProgress = $('#dial-progress');
 const elStart = $('#start');
 const elStartLabel = $('#start-label');
@@ -50,6 +52,9 @@ let running = false;
 let interval;
 let copyToastTimeout;
 let sessionGoal = '';
+let startedAt = null;
+let completedAt = null;
+let overtime = false;
 
 const todayKey = new Date().toISOString().slice(0, 10);
 
@@ -78,8 +83,14 @@ const sessions = JSON.parse(localStorage.getItem(storageKey) || '[]')
   .filter((session) => session.timestamp && session.timestamp.slice(0, 10) === todayKey);
 
 function renderTimer() {
+  const overtimeSeconds = getOvertimeSeconds();
   elTime.value = formatDuration(remaining);
-  elDialProgress.style.strokeDashoffset = DIAL_CIRCUMFERENCE * (1 - remaining / total);
+  elTime.hidden = overtime;
+  elOvertime.hidden = !overtime;
+  elOvertimeTime.textContent = `+${formatDuration(overtimeSeconds)}`;
+  elDialProgress.style.strokeDashoffset = overtime
+    ? 0
+    : DIAL_CIRCUMFERENCE * (1 - remaining / total);
   elStartLabel.textContent = running ? '완료하기' : '시작하기';
   elPlay.textContent = running ? '✓' : '▶';
   elTime.readOnly = running;
@@ -94,6 +105,16 @@ function renderTimer() {
 
   // 집중 모드가 동작(running) 중일 때만 주변 요소 딤 처리 클래스 토글
   document.body.classList.toggle('focus-active', mode === 'pomodoro' && running);
+  document.body.classList.toggle('focus-overtime', overtime);
+}
+
+function getElapsedSeconds(at = completedAt || Date.now()) {
+  if (!startedAt) return 0;
+  return Math.max(0, Math.floor((at - startedAt) / 1000));
+}
+
+function getOvertimeSeconds(at = completedAt || Date.now()) {
+  return Math.max(0, getElapsedSeconds(at) - total);
 }
 
 function renderHistory() {
@@ -119,7 +140,11 @@ function renderHistory() {
                  ${session.result ? `<span class="session-entry"><span class="session-entry-label result">결과</span><span class="session-entry-text">${escapeHtml(session.result)}</span></span>` : ''}`
               : `<span class="session-name">${escapeHtml(MODES[session.mode].name)}</span>`}
           </span>
-          <span class="session-time">${formatDuration(session.seconds)} · ${formatSessionTime(session.timestamp)}</span>
+          <span class="session-time">
+            ${formatDuration(session.seconds)}
+            ${session.overtimeSeconds ? `<span class="session-overtime">+${formatDuration(session.overtimeSeconds)}</span>` : ''}
+            · ${formatSessionTime(session.timestamp)}
+          </span>
         </li>
       `,
     )
@@ -132,7 +157,7 @@ function renderHistory() {
 }
 
 function saveSession(result = '') {
-  const elapsedSeconds = total - remaining;
+  const elapsedSeconds = getElapsedSeconds();
   if (elapsedSeconds < 1) return;
 
   sessions.push({
@@ -140,7 +165,10 @@ function saveSession(result = '') {
     goal: sessionGoal,
     result,
     seconds: elapsedSeconds,
-    timestamp: new Date().toISOString(),
+    plannedSeconds: total,
+    overtimeSeconds: getOvertimeSeconds(),
+    startedAt: new Date(startedAt).toISOString(),
+    timestamp: new Date(completedAt || Date.now()).toISOString(),
   });
 
   localStorage.setItem(storageKey, JSON.stringify(sessions));
@@ -154,6 +182,9 @@ function setMode(nextMode) {
   total = MODES[mode].minutes * 60;
   remaining = total;
   sessionGoal = '';
+  startedAt = null;
+  completedAt = null;
+  overtime = false;
   running = false;
   clearInterval(interval);
 
@@ -173,6 +204,9 @@ function finish(result = '') {
 
   remaining = total;
   sessionGoal = '';
+  startedAt = null;
+  completedAt = null;
+  overtime = false;
   document.title = 'focusflow — 세션 완료';
   renderTimer();
 }
@@ -183,6 +217,7 @@ function requestFinish() {
     return;
   }
 
+  completedAt = Date.now();
   running = false;
   clearInterval(interval);
   renderTimer();
@@ -194,15 +229,27 @@ function requestFinish() {
 }
 
 function beginTimer() {
+  startedAt = Date.now();
+  completedAt = null;
+  overtime = false;
   running = true;
   interval = setInterval(() => {
-    if (remaining <= 1) {
+    const elapsedSeconds = getElapsedSeconds();
+
+    if (elapsedSeconds >= total) {
       remaining = 0;
-      requestFinish();
+      if (mode === 'break') {
+        completedAt = Date.now();
+        finish();
+        return;
+      }
+
+      overtime = true;
+      renderTimer();
       return;
     }
 
-    remaining -= 1;
+    remaining = total - elapsedSeconds;
     renderTimer();
   }, 1000);
 
@@ -254,7 +301,8 @@ function copyHistory() {
       timeRange,
       `목표: ${session.goal || MODES.pomodoro.name}`,
       `결과: ${session.result || ''}`,
-    ].join('\n');
+      session.overtimeSeconds ? `추가 집중: ${formatDurationFriendly(session.overtimeSeconds)}` : '',
+    ].filter(Boolean).join('\n');
   });
 
   const text = [
@@ -307,6 +355,9 @@ function applyTimeInput() {
   total = duration;
   remaining = duration;
   sessionGoal = '';
+  startedAt = null;
+  completedAt = null;
+  overtime = false;
   renderTimer();
 }
 
