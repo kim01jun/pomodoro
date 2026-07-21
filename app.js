@@ -63,10 +63,11 @@ function formatDuration(seconds) {
   return `${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
 }
 
-function formatSessionTime(timestamp) {
+function formatSessionTime(timestamp, includeSeconds = false) {
   return new Date(timestamp).toLocaleTimeString('ko-KR', {
     hour: '2-digit',
     minute: '2-digit',
+    ...(includeSeconds && { second: '2-digit' }),
     hour12: false,
   });
 }
@@ -301,8 +302,7 @@ function copyHistory() {
     .reduce((sum, session) => sum + getSessionSeconds(session), 0);
 
   const sessionBlocks = sessions.map((session) => {
-    const overtimeSeconds = getSessionOvertimeSeconds(session);
-    const timeRange = `${formatSessionTime(session.startedAt)} ~ ${formatSessionTime(session.endedAt)}`;
+    const timeRange = `${formatSessionTime(session.startedAt, true)} ~ ${formatSessionTime(session.endedAt, true)}`;
 
     if (session.mode === 'break') return `${timeRange}\n휴식`;
 
@@ -310,7 +310,8 @@ function copyHistory() {
       timeRange,
       `목표: ${session.goal || MODES.pomodoro.name}`,
       `결과: ${session.result || ''}`,
-      overtimeSeconds ? `추가 집중: ${formatDurationFriendly(overtimeSeconds)}` : '',
+      `계획 시간: ${formatDurationFriendly(session.plannedSeconds)}`,
+      `실제 시간: ${formatDurationFriendly(getSessionSeconds(session))}`,
     ].filter(Boolean).join('\n');
   });
 
