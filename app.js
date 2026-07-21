@@ -165,6 +165,7 @@ function renderHistory() {
               : `<span class="session-name">${escapeHtml(MODES[session.mode].name)}</span>`}
           </span>
           <span class="session-durations" aria-label="세션 시간">
+            <span><span class="session-duration-label">시각</span><strong>${formatSessionTime(session.startedAt, false)} ~ ${formatSessionTime(session.endedAt, false)}</strong></span>
             <span><span class="session-duration-label">계획</span><strong>${formatDuration(session.plannedSeconds)}</strong></span>
             <span><span class="session-duration-label">실제</span><strong>${formatDuration(getSessionSeconds(session))}</strong></span>
           </span>
